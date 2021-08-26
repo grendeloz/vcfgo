@@ -6,14 +6,16 @@ import (
 	"fmt"
 	"math"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"sync"
 )
 
+//var infoRegexp = regexp.MustCompile(fmt.Sprintf(`##INFO=<ID=(.+),Number=([\dAGR\.]*),Type=(%s),Description="(.*)">`, typeRe))
+//var formatRegexp = regexp.MustCompile(fmt.Sprintf(`##FORMAT=<ID=(.+),Number=([\dAGR\.]*),Type=(%s),Description="(.*)">`, typeRe))
+
 var typeRe = `String|Integer|Float|Flag|Character|Unknown`
-var infoRegexp = regexp.MustCompile(fmt.Sprintf(`##INFO=<ID=(.+),Number=([\dAGR\.]*),Type=(%s),Description="(.*)">`, typeRe))
-var formatRegexp = regexp.MustCompile(fmt.Sprintf(`##FORMAT=<ID=(.+),Number=([\dAGR\.]*),Type=(%s),Description="(.*)">`, typeRe))
 var filterRegexp = regexp.MustCompile(`##FILTER=<ID=(.+),Description="(.*)">`)
 var contigRegexp = regexp.MustCompile(`contig=<.*((\w+)=([^,>]+))`)
 var sampleRegexp = regexp.MustCompile(`SAMPLE=<ID=([^,>]+)`)
@@ -26,8 +28,10 @@ var fileVersionRegexp = regexp.MustCompile(`##fileformat=VCFv(.+)`)
 type Info struct {
 	Id          string
 	Description string
-	Number      string // A G R . ''
-	Type        string // STRING INTEGER FLOAT FLAG CHARACTER UNKONWN
+	Number      string            // A G R . ''
+	Type        string            // STRING INTEGER FLOAT FLAG CHARACTER UNKNOWN
+	kvs         map[string]*Field // grendeloz
+	order       []string          // grendeloz
 }
 
 // SampleFormat holds the type info for Format fields.
@@ -52,12 +56,66 @@ type Header struct {
 
 // String returns a string representation.
 func (i *Info) String() string {
-	return fmt.Sprintf("##INFO=<ID=%s,Number=%s,Type=%s,Description=\"%s\">", i.Id, i.Number, i.Type, i.Description)
+	// Work out original order of fields
+	positions := make([]int, 0)
+	ogorder := make(map[int]*Field)
+
+	// New position-based map of fields
+	for _, f := range i.kvs {
+		ogorder[f.Index] = f
+		positions = append(positions, f.Index)
+	}
+	sort.Ints(positions)
+
+	// Create field strings in original order
+	fieldStrings := make([]string, 0)
+	for _, k := range positions {
+		f := ogorder[k]
+		thisStr := f.Key + `=`
+		if f.Quote != 0 {
+			thisStr += string(f.Quote) + f.Value + string(f.Quote)
+		} else {
+			thisStr += f.Value
+		}
+		fieldStrings = append(fieldStrings, thisStr)
+	}
+
+	// Assemble final string
+	newStr := `##INFO=<` + strings.Join(fieldStrings, `,`) + `>`
+    fmt.Println(newStr)
+	return newStr
 }
 
 // String returns a string representation.
-func (i *SampleFormat) String() string {
-	return fmt.Sprintf("##FORMAT=<ID=%s,Number=%s,Type=%s,Description=\"%s\">", i.Id, i.Number, i.Type, i.Description)
+func (s *SampleFormat) String() string {
+	// Work out original order of fields
+	positions := make([]int, 0)
+	ogorder := make(map[int]*Field)
+
+	// New position-based map of fields
+	for _, f := range s.kvs {
+		ogorder[f.Index] = f
+		positions = append(positions, f.Index)
+	}
+	sort.Ints(positions)
+
+	// Create field strings in original order
+	fieldStrings := make([]string, 0)
+	for _, k := range positions {
+		f := ogorder[k]
+		thisStr := f.Key + `=`
+		if f.Quote != 0 {
+			thisStr += string(f.Quote) + f.Value + string(f.Quote)
+		} else {
+			thisStr += f.Value
+		}
+		fieldStrings = append(fieldStrings, thisStr)
+	}
+
+	// Assemble final string
+	newStr := `##FORMAT=<` + strings.Join(fieldStrings, `,`) + `>`
+    fmt.Println(newStr)
+	return newStr
 }
 
 /*
@@ -192,18 +250,56 @@ func NewHeader() *Header {
 	return &h
 }
 
+func NewInfo() *Info {
+	var i Info
+	i.kvs = make(map[string]*Field)
+	i.order = make([]string, 0)
+	return &i
+}
+
 func parseHeaderInfo(info string) (*Info, error) {
 	res := infoRegexp.FindStringSubmatch(info)
-	if len(res) != 5 {
-		return nil, fmt.Errorf("INFO error: %s, %v", info, res)
+	i, err := infoSplitter(res[1])
+	if err != nil {
+		return i, err
 	}
-	var i Info
-	i.Id = res[1]
-	i.Number = res[2]
-	i.Type = res[3]
-	i.Description = res[4]
-	return &i, nil
+
+	// Set these for backwards compatibility. Note also that we are
+	// ignoring errors here which is not a good idea. TO DO - fix this.
+	// Also note that we need to GetValue(`ID`) to set Id.
+	v, err := i.GetValue(`ID`)
+	if err == nil {
+		i.Id = v
+	}
+	v, err = i.GetValue(`Number`)
+	if err == nil {
+		i.Number = v
+	}
+	v, err = i.GetValue(`Type`)
+	if err == nil {
+		i.Type = v
+	}
+	v, err = i.GetValue(`Description`)
+	if err == nil {
+		i.Description = v
+	}
+
+	return i, nil
 }
+
+// Old version replaced by grendeloz
+//func parseHeaderInfo(info string) (*Info, error) {
+//	res := infoRegexp.FindStringSubmatch(info)
+//	if len(res) != 5 {
+//		return nil, fmt.Errorf("INFO error: %s, %v", info, res)
+//	}
+//	var i Info
+//	i.Id = res[1]
+//	i.Number = res[2]
+//	i.Type = res[3]
+//	i.Description = res[4]
+//	return &i, nil
+//}
 
 func parseHeaderContig(contig string) (map[string]string, error) {
 	vmap := make(map[string]string)
@@ -233,16 +329,47 @@ func parseHeaderExtraKV(kv string) ([]string, error) {
 
 func parseHeaderFormat(info string) (*SampleFormat, error) {
 	res := formatRegexp.FindStringSubmatch(info)
-	if len(res) != 5 {
-		return nil, fmt.Errorf("FORMAT error: %s", info)
+	f, err := formatSplitter(res[1])
+	if err != nil {
+		return f, err
 	}
-	var i SampleFormat
-	i.Id = res[1]
-	i.Number = res[2]
-	i.Type = res[3]
-	i.Description = res[4]
-	return &i, nil
+
+	// Set these for backwards compatibility. Note also that we are
+	// ignoring errors here which is not a good idea. TO DO - fix this.
+	// Also note that we need to GetValue(`ID`) to set Id.
+	v, err := f.GetValue(`ID`)
+	if err == nil {
+		f.Id = v
+	}
+	v, err = f.GetValue(`Number`)
+	if err == nil {
+		f.Number = v
+	}
+	v, err = f.GetValue(`Type`)
+	if err == nil {
+		f.Type = v
+	}
+	v, err = f.GetValue(`Description`)
+	if err == nil {
+		f.Description = v
+	}
+
+	return f, nil
 }
+
+// Old version replaced by grendeloz
+//func parseHeaderFormat(info string) (*SampleFormat, error) {
+//	res := formatRegexp.FindStringSubmatch(info)
+//	if len(res) != 5 {
+//		return nil, fmt.Errorf("FORMAT error: %s", info)
+//	}
+//	var i SampleFormat
+//	i.Id = res[1]
+//	i.Number = res[2]
+//	i.Type = res[3]
+//	i.Description = res[4]
+//	return &i, nil
+//}
 
 func parseHeaderFilter(info string) ([]string, error) {
 	res := filterRegexp.FindStringSubmatch(info)
