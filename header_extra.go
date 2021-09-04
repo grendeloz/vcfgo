@@ -34,10 +34,10 @@ var formatRegexp = regexp.MustCompile(`##FORMAT=<(.+)>`)
 // lines. See section 1.2 from the v4.2 VCF specification (retrieved
 // 2021-08-24) at https://samtools.github.io/hts-specs/VCFv4.2.pdf
 type Field struct {
-	Key    string
-	Value  string
-	Index  int  // 0-based index of this Field in the parsed string
-	Quote  rune // empty if the value was not quoted
+	Key   string
+	Value string
+	Index int  // 0-based index of this Field in the parsed string
+	Quote rune // empty if the value was not quoted
 }
 
 // GetValue returns the value for a given key. If the key does not exist,

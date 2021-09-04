@@ -32,6 +32,7 @@ var kvtests = []struct {
 }
 
 var (
+	s1      string = `##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`
 	i1      *Field = &Field{`ID`, `NS`, 0, 0}
 	i2      *Field = &Field{`Number`, `1`, 1, 0}
 	i3      *Field = &Field{`Type`, `Integer`, 2, 0}
@@ -39,6 +40,7 @@ var (
 	ikv1           = map[string]*Field{`ID`: i1, `Number`: i2, `Type`: i3, `Description`: i4}
 	iorder1        = []string{`ID`, `Number`, `Type`, `Description`}
 
+	s2      string = `##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">`
 	i5      *Field = &Field{`ID`, `DP`, 0, 0}
 	i6      *Field = &Field{`Number`, `1`, 1, 0}
 	i7      *Field = &Field{`Type`, `Integer`, 2, 0}
@@ -46,6 +48,7 @@ var (
 	ikv2           = map[string]*Field{`ID`: i5, `Number`: i6, `Type`: i7, `Description`: i8}
 	iorder2        = []string{`ID`, `Number`, `Type`, `Description`}
 
+	s3      string = `##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">`
 	i10     *Field = &Field{`ID`, `AF`, 0, 0}
 	i11     *Field = &Field{`Number`, `A`, 1, 0}
 	i12     *Field = &Field{`Type`, `Float`, 2, 0}
@@ -53,6 +56,7 @@ var (
 	ikv3           = map[string]*Field{`ID`: i10, `Number`: i11, `Type`: i12, `Description`: i13}
 	iorder3        = []string{`ID`, `Number`, `Type`, `Description`}
 
+	s4      string = `##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele">`
 	i14     *Field = &Field{`ID`, `AA`, 0, 0}
 	i15     *Field = &Field{`Number`, `1`, 1, 0}
 	i16     *Field = &Field{`Type`, `String`, 2, 0}
@@ -60,6 +64,7 @@ var (
 	ikv4           = map[string]*Field{`ID`: i14, `Number`: i15, `Type`: i16, `Description`: i17}
 	iorder4        = []string{`ID`, `Number`, `Type`, `Description`}
 
+	s5      string = `##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">`
 	i18     *Field = &Field{`ID`, `DB`, 0, 0}
 	i19     *Field = &Field{`Number`, `0`, 1, 0}
 	i20     *Field = &Field{`Type`, `Flag`, 2, 0}
@@ -67,6 +72,7 @@ var (
 	ikv5           = map[string]*Field{`ID`: i18, `Number`: i19, `Type`: i20, `Description`: i21}
 	iorder5        = []string{`ID`, `Number`, `Type`, `Description`}
 
+	s6      string = `##INFO=<ID=H2,Number=2,Type=Flag,Description="HapMap2 membership">`
 	i22     *Field = &Field{`ID`, `H2`, 0, 0}
 	i23     *Field = &Field{`Number`, `2`, 1, 0}
 	i24     *Field = &Field{`Type`, `Flag`, 2, 0}
@@ -74,42 +80,34 @@ var (
 	ikv6           = map[string]*Field{`ID`: i22, `Number`: i23, `Type`: i24, `Description`: i25}
 	iorder6        = []string{`ID`, `Number`, `Type`, `Description`}
 
-	// INFO 7 is the same as 6 except for the order
-	i26     *Field = &Field{`ID`, `HX`, 0, 0}
-	i27     *Field = &Field{`Number`, `2`, 1, 0}
-	i28     *Field = &Field{`Type`, `Flag`, 2, 0}
-	i29     *Field = &Field{`Description`, `HapMap2 membership`, 3, '"'}
-	ikv7           = map[string]*Field{`Type`: i28, `ID`: i26, `Description`: i29, `Number`: i27}
-	//ikv7           = map[string]*Field{`ID`: i26, `Number`: i27, `Type`: i28, `Description`: i29}
-	//ikv7           = map[string]*Field{`Type`: i24, `ID`: i22, `Description`: i25, `Number`: i23}
-	iorder7 = []string{`Type`, `ID`, `Description`, `Number`}
+	// Make sure that the original ordering can be recreated
+	s7      string = `##INFO=<Type=Flag,ID=Hx,Description="XapMap2 membership",Number=2>`
+	i26     *Field = &Field{`Type`, `Flag`, 0, 0}
+	i27     *Field = &Field{`ID`, `Hx`, 1, 0}
+	i28     *Field = &Field{`Description`, `XapMap2 membership`, 2, '"'}
+	i29     *Field = &Field{`Number`, `2`, 3, 0}
+	ikv7           = map[string]*Field{`Type`: i26, `ID`: i27, `Description`: i28, `Number`: i29}
+	iorder7        = []string{`Type`, `ID`, `Description`, `Number`}
 )
 
 var infotests = []struct {
 	input string
 	exp   *Info
 }{
-	{`##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`,
-		&Info{Id: "NS", Number: "1", Type: "Integer", Description: "Number of Samples With Data",
-			kvs: ikv1, order: iorder1}},
-	{`##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">`,
-		&Info{Id: "DP", Number: "1", Type: "Integer", Description: "Total Depth",
-			kvs: ikv2, order: iorder2}},
-	{`##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">`,
-		&Info{Id: "AF", Number: "A", Type: "Float", Description: "Allele Frequency",
-			kvs: ikv3, order: iorder3}},
-	{`##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele">`,
-		&Info{Id: "AA", Number: "1", Type: "String", Description: "Ancestral Allele",
-			kvs: ikv4, order: iorder4}},
-	{`##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">`,
-		&Info{Id: "DB", Number: "0", Type: "Flag", Description: "dbSNP membership, build 129",
-			kvs: ikv5, order: iorder5}},
-	{`##INFO=<ID=H2,Number=2,Type=Flag,Description="HapMap2 membership">`,
-		&Info{Id: "H2", Number: "2", Type: "Flag", Description: "HapMap2 membership",
-			kvs: ikv6, order: iorder6}},
-	{`##INFO=<Type=Flag,ID=H2,Description="HapMap2 membership",Number=2>`,
-		&Info{Id: "HX", Number: "2", Type: "Flag", Description: "HapMap2 membership",
-			kvs: ikv7, order: iorder7}},
+	{s1, &Info{Id: "NS", Number: "1", Type: "Integer", Description: "Number of Samples With Data",
+		kvs: ikv1, order: iorder1}},
+	{s2, &Info{Id: "DP", Number: "1", Type: "Integer", Description: "Total Depth",
+		kvs: ikv2, order: iorder2}},
+	{s3, &Info{Id: "AF", Number: "A", Type: "Float", Description: "Allele Frequency",
+		kvs: ikv3, order: iorder3}},
+	{s4, &Info{Id: "AA", Number: "1", Type: "String", Description: "Ancestral Allele",
+		kvs: ikv4, order: iorder4}},
+	{s5, &Info{Id: "DB", Number: "0", Type: "Flag", Description: "dbSNP membership, build 129",
+		kvs: ikv5, order: iorder5}},
+	{s6, &Info{Id: "H2", Number: "2", Type: "Flag", Description: "HapMap2 membership",
+		kvs: ikv6, order: iorder6}},
+	{s7, &Info{Id: "Hx", Number: "2", Type: "Flag", Description: "XapMap2 membership",
+		kvs: ikv7, order: iorder7}},
 }
 
 var (

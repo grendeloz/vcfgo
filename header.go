@@ -82,7 +82,7 @@ func (i *Info) String() string {
 
 	// Assemble final string
 	newStr := `##INFO=<` + strings.Join(fieldStrings, `,`) + `>`
-    fmt.Println(newStr)
+	//fmt.Println(newStr)
 	return newStr
 }
 
@@ -114,7 +114,7 @@ func (s *SampleFormat) String() string {
 
 	// Assemble final string
 	newStr := `##FORMAT=<` + strings.Join(fieldStrings, `,`) + `>`
-    fmt.Println(newStr)
+	//fmt.Println(newStr)
 	return newStr
 }
 
