@@ -31,83 +31,139 @@ var kvtests = []struct {
 	{`ID=AF,Number=A,Type=Float,Description="Allele Frequency"`, kv3},
 }
 
+// This var block holds pairs of strings and expected data structures
+// created by parsing the strings. The data structures are complicated to
+// construct. Apologies in advance if you make more of these - grendeloz.
+
 var (
-	s1      string = `##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`
-	i1      *Field = &Field{`ID`, `NS`, 0, 0}
-	i2      *Field = &Field{`Number`, `1`, 1, 0}
-	i3      *Field = &Field{`Type`, `Integer`, 2, 0}
-	i4      *Field = &Field{`Description`, `Number of Samples With Data`, 3, '"'}
-	ikv1           = map[string]*Field{`ID`: i1, `Number`: i2, `Type`: i3, `Description`: i4}
-	iorder1        = []string{`ID`, `Number`, `Type`, `Description`}
+	is1 string = `##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`
 
-	s2      string = `##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">`
-	i5      *Field = &Field{`ID`, `DP`, 0, 0}
-	i6      *Field = &Field{`Number`, `1`, 1, 0}
-	i7      *Field = &Field{`Type`, `Integer`, 2, 0}
-	i8      *Field = &Field{`Description`, `Total Depth`, 3, '"'}
-	ikv2           = map[string]*Field{`ID`: i5, `Number`: i6, `Type`: i7, `Description`: i8}
-	iorder2        = []string{`ID`, `Number`, `Type`, `Description`}
+	ii1 = &Info{
+		Id:          "NS",
+		Number:      "1",
+		Type:        "Integer",
+		Description: "Number of Samples With Data",
+		kvs: map[string]*Field{
+			`ID`:          &Field{`ID`, `NS`, 0, 0},
+			`Number`:      &Field{`Number`, `1`, 1, 0},
+			`Type`:        &Field{`Type`, `Integer`, 2, 0},
+			`Description`: &Field{`Description`, `Number of Samples With Data`, 3, '"'}},
+		order: []string{`ID`, `Number`, `Type`, `Description`}}
 
-	s3      string = `##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">`
-	i10     *Field = &Field{`ID`, `AF`, 0, 0}
-	i11     *Field = &Field{`Number`, `A`, 1, 0}
-	i12     *Field = &Field{`Type`, `Float`, 2, 0}
-	i13     *Field = &Field{`Description`, `Allele Frequency`, 3, '"'}
-	ikv3           = map[string]*Field{`ID`: i10, `Number`: i11, `Type`: i12, `Description`: i13}
-	iorder3        = []string{`ID`, `Number`, `Type`, `Description`}
+	is2 string = `##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">`
 
-	s4      string = `##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele">`
-	i14     *Field = &Field{`ID`, `AA`, 0, 0}
-	i15     *Field = &Field{`Number`, `1`, 1, 0}
-	i16     *Field = &Field{`Type`, `String`, 2, 0}
-	i17     *Field = &Field{`Description`, `Ancestral Allele`, 3, '"'}
-	ikv4           = map[string]*Field{`ID`: i14, `Number`: i15, `Type`: i16, `Description`: i17}
-	iorder4        = []string{`ID`, `Number`, `Type`, `Description`}
+	ii2 = &Info{
+		Id:          "DP",
+		Number:      "1",
+		Type:        "Integer",
+		Description: "Total Depth",
+		kvs: map[string]*Field{
+			`ID`:          &Field{`ID`, `DP`, 0, 0},
+			`Number`:      &Field{`Number`, `1`, 1, 0},
+			`Type`:        &Field{`Type`, `Integer`, 2, 0},
+			`Description`: &Field{`Description`, `Total Depth`, 3, '"'}},
+		order: []string{`ID`, `Number`, `Type`, `Description`}}
 
-	s5      string = `##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">`
-	i18     *Field = &Field{`ID`, `DB`, 0, 0}
-	i19     *Field = &Field{`Number`, `0`, 1, 0}
-	i20     *Field = &Field{`Type`, `Flag`, 2, 0}
-	i21     *Field = &Field{`Description`, `dbSNP membership, build 129`, 3, '"'}
-	ikv5           = map[string]*Field{`ID`: i18, `Number`: i19, `Type`: i20, `Description`: i21}
-	iorder5        = []string{`ID`, `Number`, `Type`, `Description`}
+	is3 string = `##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">`
 
-	s6      string = `##INFO=<ID=H2,Number=2,Type=Flag,Description="HapMap2 membership">`
-	i22     *Field = &Field{`ID`, `H2`, 0, 0}
-	i23     *Field = &Field{`Number`, `2`, 1, 0}
-	i24     *Field = &Field{`Type`, `Flag`, 2, 0}
-	i25     *Field = &Field{`Description`, `HapMap2 membership`, 3, '"'}
-	ikv6           = map[string]*Field{`ID`: i22, `Number`: i23, `Type`: i24, `Description`: i25}
-	iorder6        = []string{`ID`, `Number`, `Type`, `Description`}
+	ii3 = &Info{
+		Id:          "AF",
+		Number:      "A",
+		Type:        "Float",
+		Description: "Allele Frequency",
+		kvs: map[string]*Field{
+			`ID`:          &Field{`ID`, `AF`, 0, 0},
+			`Number`:      &Field{`Number`, `A`, 1, 0},
+			`Type`:        &Field{`Type`, `Float`, 2, 0},
+			`Description`: &Field{`Description`, `Allele Frequency`, 3, '"'}},
+		order: []string{`ID`, `Number`, `Type`, `Description`}}
+
+	is4 string = `##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele">`
+
+	ii4 = &Info{
+		Id:          "AA",
+		Number:      "1",
+		Type:        "String",
+		Description: "Ancestral Allele",
+		kvs: map[string]*Field{
+			`ID`:          &Field{`ID`, `AA`, 0, 0},
+			`Number`:      &Field{`Number`, `1`, 1, 0},
+			`Type`:        &Field{`Type`, `String`, 2, 0},
+			`Description`: &Field{`Description`, `Ancestral Allele`, 3, '"'}},
+		order: []string{`ID`, `Number`, `Type`, `Description`}}
+
+	is5 string = `##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">`
+
+	ii5 = &Info{
+		Id:          "DB",
+		Number:      "0",
+		Type:        "Flag",
+		Description: "dbSNP membership, build 129",
+		kvs: map[string]*Field{
+			`ID`:          &Field{`ID`, `DB`, 0, 0},
+			`Number`:      &Field{`Number`, `0`, 1, 0},
+			`Type`:        &Field{`Type`, `Flag`, 2, 0},
+			`Description`: &Field{`Description`, `dbSNP membership, build 129`, 3, '"'}},
+		order: []string{`ID`, `Number`, `Type`, `Description`}}
+
+	is6 string = `##INFO=<ID=H2,Number=2,Type=Flag,Description="HapMap2 membership">`
+
+	ii6 = &Info{
+		Id:          "H2",
+		Number:      "2",
+		Type:        "Flag",
+		Description: "HapMap2 membership",
+		kvs: map[string]*Field{
+			`ID`:          &Field{`ID`, `H2`, 0, 0},
+			`Number`:      &Field{`Number`, `2`, 1, 0},
+			`Type`:        &Field{`Type`, `Flag`, 2, 0},
+			`Description`: &Field{`Description`, `HapMap2 membership`, 3, '"'}},
+		order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	// Make sure that the original ordering can be recreated
-	s7      string = `##INFO=<Type=Flag,ID=Hx,Description="XapMap2 membership",Number=2>`
-	i26     *Field = &Field{`Type`, `Flag`, 0, 0}
-	i27     *Field = &Field{`ID`, `Hx`, 1, 0}
-	i28     *Field = &Field{`Description`, `XapMap2 membership`, 2, '"'}
-	i29     *Field = &Field{`Number`, `2`, 3, 0}
-	ikv7           = map[string]*Field{`Type`: i26, `ID`: i27, `Description`: i28, `Number`: i29}
-	iorder7        = []string{`Type`, `ID`, `Description`, `Number`}
+	is7 string = `##INFO=<Type=Flag,ID=HX,Description="XapMap2 membership",Number=2>`
+
+	ii7 = &Info{
+		Id:          "HX",
+		Number:      "2",
+		Type:        "Flag",
+		Description: "XapMap2 membership",
+		kvs: map[string]*Field{
+			`Type`:        &Field{`Type`, `Flag`, 0, 0},
+			`ID`:          &Field{`ID`, `HX`, 1, 0},
+			`Description`: &Field{`Description`, `XapMap2 membership`, 2, '"'},
+			`Number`:      &Field{`Number`, `2`, 3, 0}},
+		order: []string{`Type`, `ID`, `Description`, `Number`}}
+
+	// Make sure that arbitrary fields are handled
+	is8 string = `##INFO=<Type=Flag,Trick='1',ID=Hx,Description="XapMap2 membership",Number=2>`
+
+	ii8 = &Info{
+		Id:          "Hx",
+		Number:      "2",
+		Type:        "Flag",
+		Description: "XapMap2 membership",
+		kvs: map[string]*Field{
+			`Type`:        &Field{`Type`, `Flag`, 0, 0},
+			`Trick`:       &Field{`Trick`, `1`, 1, '\''},
+			`ID`:          &Field{`ID`, `Hx`, 2, 0},
+			`Description`: &Field{`Description`, `XapMap2 membership`, 3, '"'},
+			`Number`:      &Field{`Number`, `2`, 4, 0}},
+		order: []string{`Type`, `Trick`, `ID`, `Description`, `Number`}}
 )
 
 var infotests = []struct {
 	input string
 	exp   *Info
 }{
-	{s1, &Info{Id: "NS", Number: "1", Type: "Integer", Description: "Number of Samples With Data",
-		kvs: ikv1, order: iorder1}},
-	{s2, &Info{Id: "DP", Number: "1", Type: "Integer", Description: "Total Depth",
-		kvs: ikv2, order: iorder2}},
-	{s3, &Info{Id: "AF", Number: "A", Type: "Float", Description: "Allele Frequency",
-		kvs: ikv3, order: iorder3}},
-	{s4, &Info{Id: "AA", Number: "1", Type: "String", Description: "Ancestral Allele",
-		kvs: ikv4, order: iorder4}},
-	{s5, &Info{Id: "DB", Number: "0", Type: "Flag", Description: "dbSNP membership, build 129",
-		kvs: ikv5, order: iorder5}},
-	{s6, &Info{Id: "H2", Number: "2", Type: "Flag", Description: "HapMap2 membership",
-		kvs: ikv6, order: iorder6}},
-	{s7, &Info{Id: "Hx", Number: "2", Type: "Flag", Description: "XapMap2 membership",
-		kvs: ikv7, order: iorder7}},
+	{is1, ii1},
+	{is2, ii2},
+	{is3, ii3},
+	{is4, ii4},
+	{is5, ii5},
+	{is6, ii6},
+	{is7, ii7},
+	{is8, ii8},
 }
 
 var (
@@ -140,7 +196,12 @@ var (
 	forder4        = []string{`ID`, `Number`, `Type`, `Description`}
 
 	// FORMAT 5 is the same as 4 except for the order
-	forder5 = []string{`Description`, `Number`, `ID`, `Type`}
+	f18     *Field = &Field{`ID`, `DP`, 2, 0}
+	f19     *Field = &Field{`Number`, `1`, 1, 0}
+	f20     *Field = &Field{`Type`, `Integer`, 3, 0}
+	f21     *Field = &Field{`Description`, `Read Depth`, 0, '"'}
+	fkv5           = map[string]*Field{`ID`: f18, `Number`: f19, `Type`: f20, `Description`: f21}
+	forder5        = []string{`Description`, `Number`, `ID`, `Type`}
 )
 
 // grendeloz: The DeepEqual testing requires us to recreate the expected
@@ -162,9 +223,9 @@ var formattests = []struct {
 	{`##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">`,
 		&SampleFormat{Id: "DP", Number: "1", Type: "Integer", Description: "Read Depth",
 			kvs: fkv4, order: forder4}},
-	//{`##FORMAT=<Description="Read Depth",Number=1,ID=DP,Type=Integer>`,
-	//	&SampleFormat{Id: "DP", Number: "1", Type: "Integer", Description: "Read Depth",
-	//		kvs: fkv4, order: forder5}},
+	{`##FORMAT=<Description="Read Depth",Number=1,ID=DP,Type=Integer>`,
+		&SampleFormat{Id: "DP", Number: "1", Type: "Integer", Description: "Read Depth",
+			kvs: fkv5, order: forder5}},
 }
 
 var filtertests = []struct {
