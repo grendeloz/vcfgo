@@ -64,6 +64,16 @@ func NewReader(r io.Reader, lazySamples bool) (*Reader, error) {
 	var LineNumber int64
 	h := NewHeader()
 
+	// This is going to get a big restructure.
+	// 1. All of the meta-info lines are going to be collapsed into a
+	//    pair of regex matches against the metaStructured and
+	//    metaUnstructured patterns.
+	// 2. Within the patterns from 1, we will be doing a generic parse
+	// 3. Depending on the metaType, we will be doing specific
+	//    validation checks for different types of meta-info lines
+	// 3. Depending on the metaType, we will be inserting the structs
+	//    into different header maps and checking for duplicate IDs.
+
 	for {
 
 		LineNumber++
@@ -214,8 +224,14 @@ func (vr *Reader) Parse(fields [][]byte) *Variant {
 		vr.verr.Add(err, vr.LineNumber)
 	}
 
-	v := &Variant{Chromosome: string(fields[0]), Pos: pos, Id_: string(fields[2]), Reference: string(fields[3]), Alternate: strings.Split(string(fields[4]), ","), Quality: float32(qual),
-		Filter: string(fields[6]), Header: vr.Header}
+	v := &Variant{Chromosome: string(fields[0]),
+		Pos:       pos,
+		Id_:       string(fields[2]),
+		Reference: string(fields[3]),
+		Alternate: strings.Split(string(fields[4]), ","),
+		Quality:   float32(qual),
+		Filter:    string(fields[6]),
+		Header:    vr.Header}
 
 	if len(fields) > 8 {
 		sample_fields := bytes.SplitN(fields[8], []byte{'\t'}, 2)

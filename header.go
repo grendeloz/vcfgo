@@ -30,7 +30,7 @@ type Info struct {
 	Description string
 	Number      string            // A G R . ''
 	Type        string            // STRING INTEGER FLOAT FLAG CHARACTER UNKNOWN
-	kvs         map[string]*Field // grendeloz
+	fields      map[string]*Field // grendeloz
 	order       []string          // grendeloz
 }
 
@@ -61,7 +61,7 @@ func (i *Info) String() string {
 	ogorder := make(map[int]*Field)
 
 	// New position-based map of fields
-	for _, f := range i.kvs {
+	for _, f := range i.fields {
 		ogorder[f.Index] = f
 		positions = append(positions, f.Index)
 	}
@@ -93,7 +93,7 @@ func (s *SampleFormat) String() string {
 	ogorder := make(map[int]*Field)
 
 	// New position-based map of fields
-	for _, f := range s.kvs {
+	for _, f := range s.fields {
 		ogorder[f.Index] = f
 		positions = append(positions, f.Index)
 	}
@@ -248,13 +248,6 @@ func NewHeader() *Header {
 	h.Extras = make([]string, 0)
 	h.Contigs = make([]map[string]string, 0, 64)
 	return &h
-}
-
-func NewInfo() *Info {
-	var i Info
-	i.kvs = make(map[string]*Field)
-	i.order = make([]string, 0)
-	return &i
 }
 
 func parseHeaderInfo(info string) (*Info, error) {

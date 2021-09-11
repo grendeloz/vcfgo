@@ -33,7 +33,7 @@ var kvtests = []struct {
 
 // This var block holds pairs of strings and expected data structures
 // created by parsing the strings. The data structures are complicated to
-// construct. Apologies in advance if you make more of these - grendeloz.
+// construct. Apologies if you must make more of these - grendeloz.
 
 var (
 	is1 string = `##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`
@@ -43,7 +43,7 @@ var (
 		Number:      "1",
 		Type:        "Integer",
 		Description: "Number of Samples With Data",
-		kvs: map[string]*Field{
+		fields: map[string]*Field{
 			`ID`:          &Field{`ID`, `NS`, 0, 0},
 			`Number`:      &Field{`Number`, `1`, 1, 0},
 			`Type`:        &Field{`Type`, `Integer`, 2, 0},
@@ -57,7 +57,7 @@ var (
 		Number:      "1",
 		Type:        "Integer",
 		Description: "Total Depth",
-		kvs: map[string]*Field{
+		fields: map[string]*Field{
 			`ID`:          &Field{`ID`, `DP`, 0, 0},
 			`Number`:      &Field{`Number`, `1`, 1, 0},
 			`Type`:        &Field{`Type`, `Integer`, 2, 0},
@@ -71,7 +71,7 @@ var (
 		Number:      "A",
 		Type:        "Float",
 		Description: "Allele Frequency",
-		kvs: map[string]*Field{
+		fields: map[string]*Field{
 			`ID`:          &Field{`ID`, `AF`, 0, 0},
 			`Number`:      &Field{`Number`, `A`, 1, 0},
 			`Type`:        &Field{`Type`, `Float`, 2, 0},
@@ -85,7 +85,7 @@ var (
 		Number:      "1",
 		Type:        "String",
 		Description: "Ancestral Allele",
-		kvs: map[string]*Field{
+		fields: map[string]*Field{
 			`ID`:          &Field{`ID`, `AA`, 0, 0},
 			`Number`:      &Field{`Number`, `1`, 1, 0},
 			`Type`:        &Field{`Type`, `String`, 2, 0},
@@ -99,7 +99,7 @@ var (
 		Number:      "0",
 		Type:        "Flag",
 		Description: "dbSNP membership, build 129",
-		kvs: map[string]*Field{
+		fields: map[string]*Field{
 			`ID`:          &Field{`ID`, `DB`, 0, 0},
 			`Number`:      &Field{`Number`, `0`, 1, 0},
 			`Type`:        &Field{`Type`, `Flag`, 2, 0},
@@ -113,7 +113,7 @@ var (
 		Number:      "2",
 		Type:        "Flag",
 		Description: "HapMap2 membership",
-		kvs: map[string]*Field{
+		fields: map[string]*Field{
 			`ID`:          &Field{`ID`, `H2`, 0, 0},
 			`Number`:      &Field{`Number`, `2`, 1, 0},
 			`Type`:        &Field{`Type`, `Flag`, 2, 0},
@@ -128,7 +128,7 @@ var (
 		Number:      "2",
 		Type:        "Flag",
 		Description: "XapMap2 membership",
-		kvs: map[string]*Field{
+		fields: map[string]*Field{
 			`Type`:        &Field{`Type`, `Flag`, 0, 0},
 			`ID`:          &Field{`ID`, `HX`, 1, 0},
 			`Description`: &Field{`Description`, `XapMap2 membership`, 2, '"'},
@@ -143,7 +143,7 @@ var (
 		Number:      "2",
 		Type:        "Flag",
 		Description: "XapMap2 membership",
-		kvs: map[string]*Field{
+		fields: map[string]*Field{
 			`Type`:        &Field{`Type`, `Flag`, 0, 0},
 			`Trick`:       &Field{`Trick`, `1`, 1, '\''},
 			`ID`:          &Field{`ID`, `Hx`, 2, 0},
@@ -213,19 +213,19 @@ var formattests = []struct {
 }{
 	{`##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">`,
 		&SampleFormat{Id: "GT", Number: "1", Type: "String", Description: "Genotype",
-			kvs: fkv1, order: forder1}},
+			fields: fkv1, order: forder1}},
 	{`##FORMAT=<ID=GQ,Number=1,Type=Integer,Description="Genotype Quality">`,
 		&SampleFormat{Id: "GQ", Number: "1", Type: "Integer", Description: "Genotype Quality",
-			kvs: fkv2, order: forder2}},
+			fields: fkv2, order: forder2}},
 	{`##FORMAT=<ID=HQ,Number=2,Type=Integer,Description="Haplotype Quality">`,
 		&SampleFormat{Id: "HQ", Number: "2", Type: "Integer", Description: "Haplotype Quality",
-			kvs: fkv3, order: forder3}},
+			fields: fkv3, order: forder3}},
 	{`##FORMAT=<ID=DP,Number=1,Type=Integer,Description="Read Depth">`,
 		&SampleFormat{Id: "DP", Number: "1", Type: "Integer", Description: "Read Depth",
-			kvs: fkv4, order: forder4}},
+			fields: fkv4, order: forder4}},
 	{`##FORMAT=<Description="Read Depth",Number=1,ID=DP,Type=Integer>`,
 		&SampleFormat{Id: "DP", Number: "1", Type: "Integer", Description: "Read Depth",
-			kvs: fkv5, order: forder5}},
+			fields: fkv5, order: forder5}},
 }
 
 var filtertests = []struct {
@@ -246,15 +246,15 @@ var samplelinetests = []struct {
 	{`#CHROM	POS	ID	REF	ALT	QUAL	FILTER	INFO	FORMAT`, []string{}},
 }
 
-func (s *VCFSuite) TestAKvSplitter(c *C) {
+func (s *VCFSuite) TestKvSplitter(c *C) {
 	for _, v := range kvtests {
-		obs, err := kvSplitter(v.input)
+		obs, _, err := kvSplitter(v.input)
 		c.Assert(err, IsNil)
-		kvs := make(map[string]string)
+		fields := make(map[string]string)
 		for _, f := range obs {
-			kvs[f.Key] = f.Value
+			fields[f.Key] = f.Value
 		}
-		c.Assert(kvs, DeepEquals, v.exp)
+		c.Assert(fields, DeepEquals, v.exp)
 	}
 }
 
@@ -331,5 +331,4 @@ func (s *VCFSuite) TestIssue5(c *C) {
 	c.Assert(samples[0].GT, DeepEquals, []int{2, 2})
 	c.Assert(samples[1].GT, DeepEquals, []int{2, 2})
 	c.Assert(samples[2].GT, DeepEquals, []int{2, 2})
-
 }

@@ -1,8 +1,18 @@
-[![GoDoc](https://godoc.org/github.com/brentp/vcfgo?status.svg)](https://godoc.org/github.com/brentp/vcfgo)
+[![GoDoc](https://godoc.org/github.com/brentp/vcfgo?status.svg)](ht`tps://godoc.org/github.com/brentp/vcfgo)
 [![Build Status](https://travis-ci.org/brentp/vcfgo.svg)](https://travis-ci.org/brentp/vcfgo)
 [![Coverage Status](https://coveralls.io/repos/brentp/vcfgo/badge.svg)](https://coveralls.io/r/brentp/vcfgo)
 
 vcfgo is a golang library to read, write and manipulate files in the variant call format.
+
+This implementation is a fork of github.com/brentp/vcfgo.
+It was created to allow for reading VCF files that did not comply with the
+strict header parsing rules if the original vcfgo.
+This version allows for additional fields to be specified for INFO and
+FORMAT meta-information lines (as allowed in the VCFv4.3 spec).
+It also allows the fields to occur in any order.
+
+Because of the changes, while this package is similar, it is NOT a drop-in
+replacement for the original vcfgo package.
 
 # vcfgo
 --

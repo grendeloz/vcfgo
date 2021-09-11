@@ -1,3 +1,6 @@
+// Implements the INFO field in a Variant record line. Called by Reader
+// as each variant record in the VCF file is parsed.
+
 package vcfgo
 
 import (
