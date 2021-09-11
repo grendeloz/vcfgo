@@ -1,4 +1,4 @@
-package vcfgo_test
+package vcfgo
 
 import (
 	"io"
@@ -6,12 +6,11 @@ import (
 	"strings"
 
 	"github.com/brentp/irelate/interfaces"
-	vcfgo "github.com/brentp/vcfgo"
 
 	. "gopkg.in/check.v1"
 )
 
-var vcfStr = `##fileformat=VCFv4.2
+var VCFv4_2eg = `##fileformat=VCFv4.2
 ##fileDate=20090805
 ##source=myImputationProgramV3.1
 ##reference=file:///seq/references/1000GenomesPilot-NCBI36.fasta
@@ -69,7 +68,7 @@ type HeaderSuite struct {
 
 type BadVcfSuite HeaderSuite
 
-var a = Suite(&HeaderSuite{vcfStr: vcfStr})
+var a = Suite(&HeaderSuite{vcfStr: VCFv4_2eg})
 var b = Suite(&BadVcfSuite{vcfStr: bedStr})
 
 func (s *HeaderSuite) SetUpTest(c *C) {
@@ -81,7 +80,7 @@ func (s *BadVcfSuite) SetUpTest(c *C) {
 }
 
 func (s *HeaderSuite) TestReaderHeaderParseSample(c *C) {
-	r, err := vcfgo.NewReader(s.reader, false)
+	r, err := NewReader(s.reader, false)
 	c.Assert(err, IsNil)
 	v := r.Read()
 	c.Assert(r.Error(), IsNil)
@@ -91,13 +90,13 @@ func (s *HeaderSuite) TestReaderHeaderParseSample(c *C) {
 }
 
 func (b *BadVcfSuite) TestReaderHeaderParseSample(c *C) {
-	r, err := vcfgo.NewReader(b.reader, false)
+	r, err := NewReader(b.reader, false)
 	c.Assert(r, IsNil)
 	c.Assert(err, NotNil)
 }
 
 func (s *HeaderSuite) TestSamples(c *C) {
-	r, err := vcfgo.NewReader(s.reader, false)
+	r, err := NewReader(s.reader, false)
 	c.Assert(err, IsNil)
 
 	v := r.Read()
@@ -115,11 +114,11 @@ func (s *HeaderSuite) TestSamples(c *C) {
 	c.Assert(err, IsNil)
 	c.Assert(f, DeepEquals, []int{-1, -1})
 
-	variants := make([]*vcfgo.Variant, 0)
+	variants := make([]*Variant, 0)
 	chromCount := make(map[string]int)
 	var vv interfaces.IVariant
 	for vv = r.Read(); vv != nil; vv = r.Read() {
-		v := vv.(*vcfgo.Variant)
+		v := vv.(*Variant)
 		if v == nil {
 			break
 		}
@@ -138,15 +137,15 @@ func (s *HeaderSuite) TestSamples(c *C) {
 func (s *HeaderSuite) TestWeirdHeader(c *C) {
 	rr, err := os.Open("test-weird-header.vcf")
 	c.Assert(err, IsNil)
-	_, err = vcfgo.NewReader(rr, false)
+	_, err = NewReader(rr, false)
 	c.Assert(err, IsNil)
 }
 
 func (s *HeaderSuite) TestSampleGenotypes(c *C) {
-	r, err := vcfgo.NewReader(s.reader, false)
+	r, err := NewReader(s.reader, false)
 	c.Assert(err, IsNil)
 
-	variants := make([]*vcfgo.Variant, 0)
+	variants := make([]*Variant, 0)
 	for {
 		v := r.Read()
 		if v == nil {
@@ -193,7 +192,7 @@ func (s *HeaderSuite) TestSampleGenotypes(c *C) {
 /*
 func (s *VariantSuite) TestParseOne(c *C) {
 
-	v, err := vcfgo.parseOne("key", "123", "Integer")
+	v, err := parseOne("key", "123", "Integer")
 	c.Assert(err, IsNil)
 	c.Assert(v, Equals, 123)
 

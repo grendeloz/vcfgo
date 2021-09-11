@@ -11,11 +11,12 @@ import (
 // permissible in the "key" within a structured meta line, i.e. the XXX
 // in XXX=<(.*)>.  For simplicity, I've gone with \w as a sensible
 // default but that could be too restrictive.
-var metaStructuredRegexp = regexp.MustCompile(`^##(\w+)=<(.+)>`)
+var structuredMetaRegexp = regexp.MustCompile(`^##(\w+)=<(.+)>`)
 
-// Structured lines will also match this pattern so every line must be
-// checked against the Structured pattern first.
-var metaUnstructuredRegexp = regexp.MustCompile(`^##(\w+)=(.+)`)
+// Structured lines will also match this pattern so when parsing a new
+// line, it should be checked against the structured pattern first and only
+// if that fails should it be checked against the unstructured pattern.
+var unstructuredMetaRegexp = regexp.MustCompile(`^##(\w+)=(.+)`)
 
 // Runes (like bytes) use single quotes
 var fieldSeparator rune = ','
@@ -28,55 +29,128 @@ var kvSeparator rune = '='
 type Field struct {
 	Key   string
 	Value string
-	Index int  // 0-based index of this Field in the parsed string
-	Quote rune // empty if the value was not quoted
+
+	// 0-based index of where this Field appeared in the original
+	// string. It is used to recreate meta lines as strings with the
+	// key=value pairs in the same order as they were in the original.
+	Index int
+
+	// Quote character ([`'"]) if any that was used for the value of the
+	// key-value pair. The spec does not state that double quotes must
+	// be used for all quoting but it may be so. In any case, we can cope
+	// with any of the 3 quoting characters shown above. Quote is empty
+	// if the Value was not quoted.
+	Quote rune
 }
 
-// metaStructured can hold any of the structured meta-information
+// MetaType - Create enum for header meta information line type.
+type MetaType int
+
+// Declare related constants for each MetaType starting with index 1
+const (
+	Structured   MetaType = iota + 1 // EnumIndex = 1
+	Unstructured                     // EnumIndex = 2
+)
+
+// String - Creating common behaviour - give the type a String function
+func (m MetaType) String() string {
+	return [...]string{"Structured", "Unstructured"}[m-1]
+}
+
+// EnumIndex - Creating common behaviour - give the type an EnumIndex function
+func (m MetaType) EnumIndex() int {
+	return int(m)
+}
+
+// MetaLine is designed to hold information from both structured and
+// unstructured meta information lines from the VCF header. Fields and
+// Order will only be set for structured lines and Value will only be set
+// for unstructured lines.
+// different fields set for the different MetaTypes.
+type MetaLine struct {
+	LineNumber int64
+	MetaType   MetaType
+	LineKey    string
+	Value      string
+	Fields     map[string]*Field
+	Order      []string
+	OgString   string // only available if created via NewMetaStructuredFromString()
+}
+
+// StructuredMeta can hold any of the structured meta-information
 // lines, i.e. those that have the pattern '##KEY=<(key=value)+>'.
-type metaStructured struct {
-	lineNumber int64
-	metaType   string
-	fields     map[string]*Field
-	order      []string
-	ogString   string // only available if created via NewMetaStructuredFromString()
+type StructuredMeta struct {
+	LineNumber int64
+	LineKey    string
+	Fields     map[string]*Field
+	Order      []string
+	OgString   string // only available if created via NewMetaStructuredFromString()
 }
 
-// NewMetaStructured allocates the internals and returns a *Info
-func NewMetaStructured() *metaStructured {
-	var m metaStructured
-	m.fields = make(map[string]*Field)
-	m.order = make([]string, 0)
+// metaUnstructured can hold any of the structured meta-information
+// lines, i.e. those that have the pattern '##KEY=<(key=value)+>'.
+type UnstructuredMeta struct {
+	LineNumber int64
+	Key        string
+	Value      string
+	OgString   string // only available if created via NewMetaUnstructuredFromString()
+}
+
+// NewStructuredMeta allocates the internals and returns a *Info
+func NewStructuredMeta() *StructuredMeta {
+	var m StructuredMeta
+	m.Fields = make(map[string]*Field)
+	m.Order = make([]string, 0)
 	return &m
 }
 
-func NewMetaStructuredFromString(s string) (*metaStructured, error) {
-	var m metaStructured
-	res := metaStructuredRegexp.FindStringSubmatch(s)
+// NewUnstructuredMeta allocates the internals and returns a *Info
+func NewUnstructuredMeta() *UnstructuredMeta {
+	var m UnstructuredMeta
+	return &m
+}
+
+func NewStructuredMetaFromString(s string) (*StructuredMeta, error) {
+	var m StructuredMeta
+	res := structuredMetaRegexp.FindStringSubmatch(s)
 	if len(res) != 3 {
-		return &m, fmt.Errorf("vcfgo: line did not match unstructured line pattern [%s]", s)
+		return &m, fmt.Errorf("vcfgo: line did not match structured line pattern [%s]", s)
 	}
 
 	fields, order, err := kvSplitter(res[2])
 	if err != nil {
 		return &m, err
 	}
-	m.metaType = res[1]
-	m.fields = fields
-	m.order = order
-	m.ogString = s
+	m.LineKey = res[1]
+	m.Fields = fields
+	m.Order = order
+	m.OgString = s
+
+	return &m, nil
+}
+
+func NewUnstructuredMetaFromString(s string) (*UnstructuredMeta, error) {
+	var m UnstructuredMeta
+	res := unstructuredMetaRegexp.FindStringSubmatch(s)
+	if len(res) != 3 {
+		return &m, fmt.Errorf("vcfgo: line did not match unstructured line pattern [%s]", s)
+	}
+
+	m.Key = res[1]
+	m.Value = res[2]
+	m.OgString = s
 
 	return &m, nil
 }
 
 // String returns a string representation.
-func (m *metaStructured) String() string {
+func (m *StructuredMeta) String() string {
 	// Work out original order of fields
 	positions := make([]int, 0)
 	ogorder := make(map[int]*Field)
 
 	// New position-based map of fields
-	for _, f := range m.fields {
+	for _, f := range m.Fields {
 		ogorder[f.Index] = f
 		positions = append(positions, f.Index)
 	}
@@ -96,26 +170,26 @@ func (m *metaStructured) String() string {
 	}
 
 	// Assemble final string
-	newStr := `##` + m.metaType + `=<` + strings.Join(fieldStrings, `,`) + `>`
+	newStr := `##` + m.LineKey + `=<` + strings.Join(fieldStrings, `,`) + `>`
 	//fmt.Println(newStr)
 	return newStr
 }
 
-// A meta Header line type using metaStructured by composition
-type Pickle metaStructured
+// A meta Header line type using StructuredMeta by composition
+type Pickle StructuredMeta
 
 func NewPickle() *Pickle {
 	var p Pickle
-	p.metaType = `PICKLE`
-	p.fields = make(map[string]*Field)
-	p.order = make([]string, 0)
+	p.LineKey = `PICKLE`
+	p.Fields = make(map[string]*Field)
+	p.Order = make([]string, 0)
 	return &p
 }
 
 // GetValue returns the value for a given key. If the key does not exist,
 // an ErrKeyNotFound error is returned.
-func (m *metaStructured) GetValue(k string) (string, error) {
-	if f, found := m.fields[k]; found {
+func (m *StructuredMeta) GetValue(k string) (string, error) {
+	if f, found := m.Fields[k]; found {
 		return f.Value, nil
 	} else {
 		return ``, ErrKeyNotFound
@@ -124,8 +198,8 @@ func (m *metaStructured) GetValue(k string) (string, error) {
 
 // GetField returns the Field for a given key. If the key does not exist,
 // an ErrKeyNotFound error is returned.
-func (m *metaStructured) GetField(k string) (*Field, error) {
-	if f, found := m.fields[k]; found {
+func (m *StructuredMeta) GetField(k string) (*Field, error) {
+	if f, found := m.Fields[k]; found {
 		return f, nil
 	} else {
 		return nil, ErrKeyNotFound
@@ -147,7 +221,7 @@ func kvSplitter(s string) (map[string]*Field, []string, error) {
 
 	var k, v string
 	var ctr int
-	var quote rune
+	var quote, lastrune rune
 
 	for i, r := range runes {
 		//fmt.Printf("> i:%d r:%c k:%s v:%s state:%v\n", i, r, k, v, state)
@@ -187,7 +261,8 @@ func kvSplitter(s string) (map[string]*Field, []string, error) {
 			}
 			state = inKey
 		case inQuotedValue:
-			if r == quote {
+			// quotes only count if they are not backspaced
+			if r == quote && lastrune != '\\' {
 				f := Field{Key: k, Value: v, Index: ctr, Quote: quote}
 				//fmt.Printf("field: %v\n", f)
 				fields[k] = &f
@@ -203,6 +278,8 @@ func kvSplitter(s string) (map[string]*Field, []string, error) {
 		default:
 			return fields, order, fmt.Errorf("kvSplitter: problem parsing Key=value string i:%d r:%c k:%s v:%s state:%v\n", i, r, k, v, state)
 		}
+
+		lastrune = r
 		//fmt.Printf("  i:%d r:%c k:%s v:%s state:%v\n", i, r, k, v, state)
 	}
 

@@ -37,16 +37,45 @@ type Info struct {
 // SampleFormat holds the type info for Format fields.
 type SampleFormat Info
 
-// Header holds all the type and format information for the variants.
+// Header holds a heap of valuable annotation without which it is very
+// difficult to make sense of the variant records. While the
+// meta-information lines are all optional (except for fileformt), a VCF
+// without a substantial header is very difficult to use.  At the absolute
+// minimum the header should contain a FILTER line for each string used in
+// the FILTER field (column 6, 0-based numbering), an INFO line for each
+// element in the INFO field (column 7) and a FORMAT line for each
+// element in the FORMAT field (column 8).
 type Header struct {
+	// Added by composition so functions which take this type as a
+	// receiver will work with a Header as receiver.
 	sync.RWMutex
 
-	SampleNames   []string
+	// Mandatory first header line for all VCFfiles.
+	FileFormat string
+
+	// Parsed from #CHROM line.
+	SampleNames []string
+
+	// This holds an array of StructuredMeta and UnstructuredMeta
+	// in the order in which they were observed in the original header.
+	// It does not hold the fileformat meta line which is parsed
+	// separately and nor does it hold the #CHROM line.
+	lines []interface{}
+
+	// This is the heart of the new header system but it's nowhere near
+	// complete yet. And if I can master the reflect package, it may
+	// yet turn out that lines plus some nice functions that pull out
+	// interfaces from lines is all we need.
+	Structured   []*StructuredMeta
+	Unstructured []*UnstructuredMeta
+
+	// I think these are all headed to the scrap heap once I have the
+	// Structured and Unstructured lists (maps?) working.
 	Infos         map[string]*Info
 	SampleFormats map[string]*SampleFormat
 	Filters       map[string]string
+	Pickles       map[string]*StructuredMeta
 	Extras        []string
-	FileFormat    string
 	// Contigs is a list of maps of length, URL, etc.
 	Contigs []map[string]string
 	// ##SAMPLE

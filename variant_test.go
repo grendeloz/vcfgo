@@ -1,11 +1,9 @@
-package vcfgo_test
+package vcfgo
 
 import (
 	"fmt"
 	"io"
 	"strings"
-
-	"github.com/brentp/vcfgo"
 
 	. "gopkg.in/check.v1"
 )
@@ -17,13 +15,13 @@ type VariantSuite struct {
 var _ = Suite(&VariantSuite{})
 
 func (s *VariantSuite) SetUpTest(c *C) {
-	s.reader = strings.NewReader(vcfStr)
+	s.reader = strings.NewReader(VCFv4_2eg)
 }
 
 func (s *VariantSuite) TestVariantGetInt(c *C) {
-	rdr, err := vcfgo.NewReader(s.reader, true)
+	rdr, err := NewReader(s.reader, true)
 	c.Assert(err, IsNil)
-	v := rdr.Read() //.(*vcfgo.Variant)
+	v := rdr.Read() //.(*Variant)
 	v.Info()
 
 	ns, err := v.Info_.Get("NS")
@@ -53,17 +51,17 @@ func (s *VariantSuite) TestVariantGetInt(c *C) {
 }
 
 func (s *VariantSuite) TestInfoField(c *C) {
-	rdr, err := vcfgo.NewReader(s.reader, false)
+	rdr, err := NewReader(s.reader, false)
 	c.Assert(err, IsNil)
-	v := rdr.Read() //.(*vcfgo.Variant)
+	v := rdr.Read() //.(*Variant)
 	vstr := fmt.Sprintf("%s", v.Info())
 	c.Assert(vstr, Equals, "NS=3;DP=14;AF=0.5;DB;H2")
 }
 
 func (s *VariantSuite) TestInfoMap(c *C) {
-	rdr, err := vcfgo.NewReader(s.reader, false)
+	rdr, err := NewReader(s.reader, false)
 	c.Assert(err, IsNil)
-	v := rdr.Read() //.(*vcfgo.Variant)
+	v := rdr.Read() //.(*Variant)
 
 	vstr := fmt.Sprintf("%s", v)
 	c.Assert(vstr, Equals, "20\t14370\trs6054257\tG\tA\t29.0\tPASS\tNS=3;DP=14;AF=0.5;DB;H2\tGT:GQ:DP:HQ\t0|0:48:1:51,51\t1|0:48:8:51,51\t1/1:43:5:.,.")
@@ -82,7 +80,7 @@ func (s *VariantSuite) TestInfoMap(c *C) {
 }
 
 func (s *VariantSuite) TestStartEnd(c *C) {
-	rdr, err := vcfgo.NewReader(s.reader, false)
+	rdr, err := NewReader(s.reader, false)
 	c.Assert(err, IsNil)
 	v := rdr.Read()
 

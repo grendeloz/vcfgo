@@ -131,6 +131,23 @@ func NewReader(r io.Reader, lazySamples bool) (*Reader, error) {
 			}
 		} else if strings.HasPrefix(line, "##PEDIGREE") {
 			h.Pedigrees = append(h.Pedigrees, line)
+
+		} else if structuredMetaRegexp.Find([]byte(line)) != nil {
+			m, err := NewStructuredMetaFromString(line)
+			verr.Add(err, LineNumber)
+			h.Structured = append(h.Structured, m)
+			h.lines = append(h.lines, m)
+			if m.LineKey == `PICKLE` {
+				v, err := m.GetValue(`ID`)
+				verr.Add(err, LineNumber)
+				h.Pickles[v] = m
+			}
+		} else if unstructuredMetaRegexp.Find([]byte(line)) != nil {
+			m, err := NewUnstructuredMetaFromString(line)
+			verr.Add(err, LineNumber)
+			h.Unstructured = append(h.Unstructured, m)
+			h.lines = append(h.lines, m)
+
 		} else if strings.HasPrefix(line, "##") {
 			kv, err := parseHeaderExtraKV(line)
 			verr.Add(err, LineNumber)
