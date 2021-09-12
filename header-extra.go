@@ -35,6 +35,7 @@ const (
 var (
 	ErrKeyNotFound  = errors.New("vcfgo: key not found")
 	ErrDuplicateKey = errors.New("vcfgo: key cannot be added multiple times")
+	ErrLinePattern  = errors.New("vcfgo: unexpected header line")
 )
 
 var infoRegexp = regexp.MustCompile(`##INFO=<(.+)>`)

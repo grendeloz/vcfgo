@@ -48,13 +48,13 @@ type MetaType int
 
 // Declare related constants for each MetaType starting with index 1
 const (
-	Structured   MetaType = iota + 1 // EnumIndex = 1
-	Unstructured                     // EnumIndex = 2
+	Unstructured MetaType = iota // EnumIndex = 0
+	Structured                   // EnumIndex = 1
 )
 
 // String - Creating common behaviour - give the type a String function
 func (m MetaType) String() string {
-	return [...]string{"Structured", "Unstructured"}[m-1]
+	return [...]string{"Unstructured", "Structured"}[m]
 }
 
 // EnumIndex - Creating common behaviour - give the type an EnumIndex function
@@ -69,12 +69,121 @@ func (m MetaType) EnumIndex() int {
 // different fields set for the different MetaTypes.
 type MetaLine struct {
 	LineNumber int64
-	MetaType   MetaType
-	LineKey    string
-	Value      string
-	Fields     map[string]*Field
-	Order      []string
-	OgString   string // only available if created via NewMetaStructuredFromString()
+
+	// MetaType defaults to Unstructured. You can manually set this
+	// value but it's best not to. Let the package do the work.
+	MetaType MetaType
+
+	// The basic XXX= value which is present in both STructured and
+	// Unstructured MetaLines.
+	LineKey string
+
+	// Value is only used in Unstructured MetaLines - STructured
+	// MetaLines use Fields and Order instead.
+	Value string
+
+	// Fields and Order contain the key=value items (as Fields) from a
+	// Structured MetaLine plus the order in which they occured in the
+	// OgString or the order in which they were added with AddField().
+	// The Order is obeyed by String()
+	Fields map[string]*Field
+	Order  []string
+
+	// OgString is only available if the MetaLine was created via
+	// NewMetaLineFromString().
+	OgString string
+}
+
+// NewMetaLine returns a pointer to a MetaLine. By default, the MetaType
+// is Unstructured. If you use the AddField() function, MetaType will be
+// automatically converted to Structured.
+func NewMetaLine() *MetaLine {
+	var m MetaLine
+	m.Fields = make(map[string]*Field)
+	m.Order = make([]string, 0)
+	return &m
+}
+
+// NewMetaLineFromString matches the input string against the pattern
+// for Structured and Unstructured MetaLines and returns a MetaLine. If
+// neither pattern matches, it throws an error.
+func NewMetaLineFromString(s string) (*MetaLine, error) {
+	var m MetaLine
+
+	if structuredMetaRegexp.Find([]byte(s)) != nil {
+		res := structuredMetaRegexp.FindStringSubmatch(s)
+
+		if len(res) != 3 {
+			return &m, fmt.Errorf("%w - structured line: %s", ErrLinePattern, s)
+		}
+
+		fields, order, err := kvSplitter(res[2])
+		if err != nil {
+			return &m, err
+		}
+		m.MetaType = Structured
+		m.LineKey = res[1]
+		m.Fields = fields
+		m.Order = order
+		m.OgString = s
+
+		return &m, nil
+	} else if unstructuredMetaRegexp.Find([]byte(s)) != nil {
+
+		res := unstructuredMetaRegexp.FindStringSubmatch(s)
+		if len(res) != 3 {
+			return &m, fmt.Errorf("%w - unstructured line: %s", ErrLinePattern, s)
+		}
+
+		m.MetaType = Unstructured
+		m.LineKey = res[1]
+		m.Value = res[2]
+		m.OgString = s
+
+		return &m, nil
+	} else {
+		return &m, fmt.Errorf("%w - %s", ErrLinePattern, s)
+	}
+
+}
+
+// String returns a string representation.
+func (m *MetaLine) String() (string, error) {
+	if m.MetaType == Structured {
+		// Work out original order of fields
+		positions := make([]int, 0)
+		ogorder := make(map[int]*Field)
+
+		// New position-based map of fields
+		for _, f := range m.Fields {
+			ogorder[f.Index] = f
+			positions = append(positions, f.Index)
+		}
+		sort.Ints(positions)
+
+		// Create field strings in original order
+		fieldStrings := make([]string, 0)
+		for _, k := range positions {
+			f := ogorder[k]
+			thisStr := f.Key + `=`
+			if f.Quote != 0 {
+				thisStr += string(f.Quote) + f.Value + string(f.Quote)
+			} else {
+				thisStr += f.Value
+			}
+			fieldStrings = append(fieldStrings, thisStr)
+		}
+
+		// Assemble final string
+		newStr := `##` + m.LineKey + `=<` + strings.Join(fieldStrings, `,`) + `>`
+		return newStr, nil
+	} else if m.MetaType == Unstructured {
+		// This is a trivial case
+		newStr := `##` + m.LineKey + `=` + m.Value
+		return newStr, nil
+	}
+	// If we get to here then m.MetaType is borked.
+	return ``, fmt.Errorf("MetaType has an unexpected value: %v", m.MetaType)
 }
 
 // StructuredMeta can hold any of the structured meta-information

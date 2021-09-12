@@ -6,13 +6,15 @@ vcfgo is a golang library to read, write and manipulate files in the variant cal
 
 This implementation is a fork of github.com/brentp/vcfgo.
 It was created to allow for reading VCF files that did not comply with the
-strict header parsing rules if the original vcfgo.
+strict header parsing rules of the original vcfgo.
 This version allows for additional fields to be specified for INFO and
 FORMAT meta-information lines (as allowed in the VCFv4.3 spec).
 It also allows the fields to occur in any order.
 
 Because of the changes, while this package is similar, it is NOT a drop-in
-replacement for the original vcfgo package.
+replacement for the original vcfgo package. In general it allows for
+looser parsing of VCF headers. The documentation below is as-per the
+original package except where necessary to reflect the changes made.
 
 # vcfgo
 --
