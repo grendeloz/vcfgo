@@ -41,7 +41,9 @@ func TestKVCreation(t *testing.T) {
 // construct. Apologies if you must make more of these - grendeloz.
 
 var (
-	mi2 = &MetaLine{
+	ms1 string = `##PICKLE=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`
+
+	mi1 = &MetaLine{
 		LineKey:  `PICKLE`,
 		MetaType: Structured,
 		KVs: map[string]*KV{
@@ -50,15 +52,15 @@ var (
 			`Type`:        &KV{`Type`, `Integer`, 2, 0},
 			`Description`: &KV{`Description`, `Number of Samples With Data`, 3, '"'}},
 		Order:    []string{`ID`, `Number`, `Type`, `Description`},
-		OgString: `##PICKLE=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`}
+		OgString: ms1}
 
-	ms3 string = `##STOOGES=this is another fine kettle of fish`
+	ms2 string = `##STOOGES=this is another fine kettle of fish`
 
-	mi3 = &MetaLine{
+	mi2 = &MetaLine{
 		LineKey:  `STOOGES`,
 		MetaType: Unstructured,
-		Value:    `##STOOGES=this is another fine kettle of fish`,
-		OgString: `##STOOGES=this is another fine kettle of fish`}
+		Value:    `this is another fine kettle of fish`,
+		OgString: ms2}
 )
 
 func TestMetaLine(t *testing.T) {
@@ -66,8 +68,8 @@ func TestMetaLine(t *testing.T) {
 		input string
 		exp   *MetaLine
 	}{
-		{ms1, mi2},
-		{ms3, mi3},
+		{ms1, mi1},
+		{ms2, mi2},
 	}
 
 	for _, v := range mstests {

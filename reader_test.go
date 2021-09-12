@@ -39,22 +39,22 @@ func (s *ReaderSuite) TestReaderHeaderInfos(c *C) {
 		Number:      "1",
 		Type:        "Integer",
 		Description: "Number of Samples With Data",
-		fields: map[string]*Field{
-			`ID`:          &Field{"ID", "NS", 0, 0},
-			`Number`:      &Field{"Number", "1", 1, 0},
-			`Type`:        &Field{"Type", "Integer", 2, 0},
-			`Description`: &Field{"Description", "Number of Samples With Data", 3, '"'}},
+		fields: map[string]*KV{
+			`ID`:          &KV{"ID", "NS", 0, 0},
+			`Number`:      &KV{"Number", "1", 1, 0},
+			`Type`:        &KV{"Type", "Integer", 2, 0},
+			`Description`: &KV{"Description", "Number of Samples With Data", 3, '"'}},
 		order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	parsedGT := &SampleFormat{Id: "GT",
 		Number:      "1",
 		Type:        "String",
 		Description: "Genotype",
-		fields: map[string]*Field{
-			`ID`:          &Field{"ID", "GT", 0, 0},
-			`Number`:      &Field{"Number", "1", 1, 0},
-			`Type`:        &Field{"Type", "String", 2, 0},
-			`Description`: &Field{"Description", "Genotype", 3, '"'}},
+		fields: map[string]*KV{
+			`ID`:          &KV{"ID", "GT", 0, 0},
+			`Number`:      &KV{"Number", "1", 1, 0},
+			`Type`:        &KV{"Type", "String", 2, 0},
+			`Description`: &KV{"Description", "Genotype", 3, '"'}},
 		order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	v, err := NewReader(s.reader, false)
@@ -67,10 +67,12 @@ func (s *ReaderSuite) TestReaderHeaderInfos(c *C) {
 func (s *ReaderSuite) TestReaderHeaderExtras(c *C) {
 	v, err := NewReader(s.reader, true)
 	c.Assert(err, IsNil)
-	c.Assert(len(v.Header.Unstructured), Equals, 4)
-	c.Assert(v.Header.Unstructured[0].OgString, Equals, `##fileDate=20090805`)
-	c.Assert(v.Header.Unstructured[0].Key, Equals, `fileDate`)
-	c.Assert(v.Header.Unstructured[0].Value, Equals, `20090805`)
+	c.Assert(len(v.Header.Lines), Equals, 4)
+	c.Assert(v.Header.Lines[0].OgString, Equals, `##fileDate=20090805`)
+	c.Assert(v.Header.Lines[0].LineKey, Equals, `fileDate`)
+	c.Assert(v.Header.Lines[0].Value, Equals, `20090805`)
+	c.Assert(v.Header.Lines[3].LineKey, Equals, `phasing`)
+	c.Assert(v.Header.Lines[3].Value, Equals, `partial`)
 }
 
 func (s *ReaderSuite) TestReaderRead(c *C) {
@@ -115,17 +117,16 @@ func (s *ReaderSuite) TestReaderRead(c *C) {
 	c.Assert(rec0.Filter, Equals, "q10")
 }
 
-func (s *ReaderSuite) TestReaderRVGBug(c *C) {
-	v, err := os.Open("test-h.vcf")
-	if err != nil {
-		c.Fatalf("error opening test-h.vcf")
-	}
-	rdr, err := NewReader(v, false)
-	c.Assert(err, IsNil)
-	rec := rdr.Read()
-	_ = rec
-
-}
+//func (s *ReaderSuite) TestReaderRVGBug(c *C) {
+//	v, err := os.Open("test-h.vcf")
+//	if err != nil {
+//		c.Fatalf("error opening test-h.vcf")
+//	}
+//	rdr, err := NewReader(v, false)
+//	c.Assert(err, IsNil)
+//	rec := rdr.Read()
+//	_ = rec
+//}
 
 func (s *ReaderSuite) TestSampleParsingErrors(c *C) {
 	sr := strings.NewReader(`##fileformat=VCFv4.0

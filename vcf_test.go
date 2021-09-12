@@ -297,13 +297,6 @@ func (s *VCFSuite) TestHeaderContigParse(c *C) {
 	c.Assert(m, DeepEquals, map[string]string{"assembly": "B36", "md5": "f126cdf8a6e0c7f379d618ff66beb2da", "species": "\"Homo sapiens\"", "taxonomy": "x", "ID": "20", "length": "62435964"})
 }
 
-func (s *VCFSuite) TestHeaderExtra(c *C) {
-	obs, err := parseHeaderExtra("##key=value")
-	c.Assert(err, IsNil)
-	c.Assert(obs[0], Equals, "key")
-	c.Assert(obs[1], Equals, "value")
-}
-
 func (s *VCFSuite) TestHeaderSampleLine(c *C) {
 
 	for _, v := range samplelinetests {
