@@ -51,9 +51,9 @@ func (i *Info) GetValue(k string) (string, error) {
 	}
 }
 
-// GetField returns the Field for a given key. If the key does not exist,
+// GetKV returns the KV for a given key. If the key does not exist,
 // an ErrKeyNotFound error is returned.
-func (i *Info) GetField(k string) (*Field, error) {
+func (i *Info) GetKV(k string) (*KV, error) {
 	if f, found := i.fields[k]; found {
 		return f, nil
 	} else {
@@ -71,9 +71,9 @@ func (s *SampleFormat) GetValue(k string) (string, error) {
 	}
 }
 
-// GetField returns the Field for a given key. If the key does not exist,
+// GetKV returns the KV for a given key. If the key does not exist,
 // an ErrKeyNotFound error is returned.
-func (s *SampleFormat) GetField(k string) (*Field, error) {
+func (s *SampleFormat) GetKV(k string) (*KV, error) {
 	if f, found := s.fields[k]; found {
 		return f, nil
 	} else {
@@ -84,7 +84,7 @@ func (s *SampleFormat) GetField(k string) (*Field, error) {
 // NewInfo allocates the internals and returns a *Info
 func NewInfo() *Info {
 	var i Info
-	i.fields = make(map[string]*Field)
+	i.fields = make(map[string]*KV)
 	i.order = make([]string, 0)
 	return &i
 }

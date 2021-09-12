@@ -1,6 +1,3 @@
-// Implements the INFO field in a Variant record line. Called by Reader
-// as each variant record in the VCF file is parsed.
-
 package vcfgo
 
 import (
@@ -10,6 +7,8 @@ import (
 	"strings"
 )
 
+// InfoByte holds the INFO field in a Variant record line. Called by Reader
+// as each variant record in the VCF file is parsed.
 type InfoByte struct {
 	Info []byte
 

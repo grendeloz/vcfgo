@@ -38,123 +38,115 @@ var kvtests = []struct {
 var (
 	is1 string = `##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`
 
-	ii1 = &Info{
-		Id:          "NS",
-		Number:      "1",
-		Type:        "Integer",
-		Description: "Number of Samples With Data",
-		fields: map[string]*Field{
-			`ID`:          &Field{`ID`, `NS`, 0, 0},
-			`Number`:      &Field{`Number`, `1`, 1, 0},
-			`Type`:        &Field{`Type`, `Integer`, 2, 0},
-			`Description`: &Field{`Description`, `Number of Samples With Data`, 3, '"'}},
-		order: []string{`ID`, `Number`, `Type`, `Description`}}
+	ii1 = &MetaLine{
+		LineKey:  "INFO",
+		MetaType: Structured,
+		OgString: is1,
+		KVs: map[string]*KV{
+			`ID`:          &KV{`ID`, `NS`, 0, 0},
+			`Number`:      &KV{`Number`, `1`, 1, 0},
+			`Type`:        &KV{`Type`, `Integer`, 2, 0},
+			`Description`: &KV{`Description`, `Number of Samples With Data`, 3, '"'}},
+		Order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	is2 string = `##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">`
 
-	ii2 = &Info{
-		Id:          "DP",
-		Number:      "1",
-		Type:        "Integer",
-		Description: "Total Depth",
-		fields: map[string]*Field{
-			`ID`:          &Field{`ID`, `DP`, 0, 0},
-			`Number`:      &Field{`Number`, `1`, 1, 0},
-			`Type`:        &Field{`Type`, `Integer`, 2, 0},
-			`Description`: &Field{`Description`, `Total Depth`, 3, '"'}},
-		order: []string{`ID`, `Number`, `Type`, `Description`}}
+	ii2 = &MetaLine{
+		LineKey:  "INFO",
+		MetaType: Structured,
+		OgString: is2,
+		KVs: map[string]*KV{
+			`ID`:          &KV{`ID`, `DP`, 0, 0},
+			`Number`:      &KV{`Number`, `1`, 1, 0},
+			`Type`:        &KV{`Type`, `Integer`, 2, 0},
+			`Description`: &KV{`Description`, `Total Depth`, 3, '"'}},
+		Order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	is3 string = `##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">`
 
-	ii3 = &Info{
-		Id:          "AF",
-		Number:      "A",
-		Type:        "Float",
-		Description: "Allele Frequency",
-		fields: map[string]*Field{
-			`ID`:          &Field{`ID`, `AF`, 0, 0},
-			`Number`:      &Field{`Number`, `A`, 1, 0},
-			`Type`:        &Field{`Type`, `Float`, 2, 0},
-			`Description`: &Field{`Description`, `Allele Frequency`, 3, '"'}},
-		order: []string{`ID`, `Number`, `Type`, `Description`}}
+	ii3 = &MetaLine{
+		LineKey:  "INFO",
+		MetaType: Structured,
+		OgString: is3,
+		KVs: map[string]*KV{
+			`ID`:          &KV{`ID`, `AF`, 0, 0},
+			`Number`:      &KV{`Number`, `A`, 1, 0},
+			`Type`:        &KV{`Type`, `Float`, 2, 0},
+			`Description`: &KV{`Description`, `Allele Frequency`, 3, '"'}},
+		Order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	is4 string = `##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele">`
 
-	ii4 = &Info{
-		Id:          "AA",
-		Number:      "1",
-		Type:        "String",
-		Description: "Ancestral Allele",
-		fields: map[string]*Field{
-			`ID`:          &Field{`ID`, `AA`, 0, 0},
-			`Number`:      &Field{`Number`, `1`, 1, 0},
-			`Type`:        &Field{`Type`, `String`, 2, 0},
-			`Description`: &Field{`Description`, `Ancestral Allele`, 3, '"'}},
-		order: []string{`ID`, `Number`, `Type`, `Description`}}
+	ii4 = &MetaLine{
+		LineKey:  "INFO",
+		MetaType: Structured,
+		OgString: is4,
+		KVs: map[string]*KV{
+			`ID`:          &KV{`ID`, `AA`, 0, 0},
+			`Number`:      &KV{`Number`, `1`, 1, 0},
+			`Type`:        &KV{`Type`, `String`, 2, 0},
+			`Description`: &KV{`Description`, `Ancestral Allele`, 3, '"'}},
+		Order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	is5 string = `##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">`
 
-	ii5 = &Info{
-		Id:          "DB",
-		Number:      "0",
-		Type:        "Flag",
-		Description: "dbSNP membership, build 129",
-		fields: map[string]*Field{
-			`ID`:          &Field{`ID`, `DB`, 0, 0},
-			`Number`:      &Field{`Number`, `0`, 1, 0},
-			`Type`:        &Field{`Type`, `Flag`, 2, 0},
-			`Description`: &Field{`Description`, `dbSNP membership, build 129`, 3, '"'}},
-		order: []string{`ID`, `Number`, `Type`, `Description`}}
+	ii5 = &MetaLine{
+		LineKey:  "INFO",
+		MetaType: Structured,
+		OgString: is5,
+		KVs: map[string]*KV{
+			`ID`:          &KV{`ID`, `DB`, 0, 0},
+			`Number`:      &KV{`Number`, `0`, 1, 0},
+			`Type`:        &KV{`Type`, `Flag`, 2, 0},
+			`Description`: &KV{`Description`, `dbSNP membership, build 129`, 3, '"'}},
+		Order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	is6 string = `##INFO=<ID=H2,Number=2,Type=Flag,Description="HapMap2 membership">`
 
-	ii6 = &Info{
-		Id:          "H2",
-		Number:      "2",
-		Type:        "Flag",
-		Description: "HapMap2 membership",
-		fields: map[string]*Field{
-			`ID`:          &Field{`ID`, `H2`, 0, 0},
-			`Number`:      &Field{`Number`, `2`, 1, 0},
-			`Type`:        &Field{`Type`, `Flag`, 2, 0},
-			`Description`: &Field{`Description`, `HapMap2 membership`, 3, '"'}},
-		order: []string{`ID`, `Number`, `Type`, `Description`}}
+	ii6 = &MetaLine{
+		LineKey:  "INFO",
+		MetaType: Structured,
+		OgString: is6,
+		KVs: map[string]*KV{
+			`ID`:          &KV{`ID`, `H2`, 0, 0},
+			`Number`:      &KV{`Number`, `2`, 1, 0},
+			`Type`:        &KV{`Type`, `Flag`, 2, 0},
+			`Description`: &KV{`Description`, `HapMap2 membership`, 3, '"'}},
+		Order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	// Make sure that the original ordering can be recreated
 	is7 string = `##INFO=<Type=Flag,ID=HX,Description="XapMap2 membership",Number=2>`
 
-	ii7 = &Info{
-		Id:          "HX",
-		Number:      "2",
-		Type:        "Flag",
-		Description: "XapMap2 membership",
-		fields: map[string]*Field{
-			`Type`:        &Field{`Type`, `Flag`, 0, 0},
-			`ID`:          &Field{`ID`, `HX`, 1, 0},
-			`Description`: &Field{`Description`, `XapMap2 membership`, 2, '"'},
-			`Number`:      &Field{`Number`, `2`, 3, 0}},
-		order: []string{`Type`, `ID`, `Description`, `Number`}}
+	ii7 = &MetaLine{
+		LineKey:  "INFO",
+		MetaType: Structured,
+		OgString: is7,
+		KVs: map[string]*KV{
+			`Type`:        &KV{`Type`, `Flag`, 0, 0},
+			`ID`:          &KV{`ID`, `HX`, 1, 0},
+			`Description`: &KV{`Description`, `XapMap2 membership`, 2, '"'},
+			`Number`:      &KV{`Number`, `2`, 3, 0}},
+		Order: []string{`Type`, `ID`, `Description`, `Number`}}
 
 	// Make sure that arbitrary fields are handled
 	is8 string = `##INFO=<Type=Flag,Trick='1',ID=Hx,Description="XapMap2 membership",Number=2>`
 
-	ii8 = &Info{
-		Id:          "Hx",
-		Number:      "2",
-		Type:        "Flag",
-		Description: "XapMap2 membership",
-		fields: map[string]*Field{
-			`Type`:        &Field{`Type`, `Flag`, 0, 0},
-			`Trick`:       &Field{`Trick`, `1`, 1, '\''},
-			`ID`:          &Field{`ID`, `Hx`, 2, 0},
-			`Description`: &Field{`Description`, `XapMap2 membership`, 3, '"'},
-			`Number`:      &Field{`Number`, `2`, 4, 0}},
-		order: []string{`Type`, `Trick`, `ID`, `Description`, `Number`}}
+	ii8 = &MetaLine{
+		LineKey:  "INFO",
+		MetaType: Structured,
+		OgString: is8,
+		KVs: map[string]*KV{
+			`Type`:        &KV{`Type`, `Flag`, 0, 0},
+			`Trick`:       &KV{`Trick`, `1`, 1, '\''},
+			`ID`:          &KV{`ID`, `Hx`, 2, 0},
+			`Description`: &KV{`Description`, `XapMap2 membership`, 3, '"'},
+			`Number`:      &KV{`Number`, `2`, 4, 0}},
+		Order: []string{`Type`, `Trick`, `ID`, `Description`, `Number`}}
 )
 
-var infotests = []struct {
+var metaLineInfoTests = []struct {
 	input string
-	exp   *Info
+	exp   *MetaLine
 }{
 	{is1, ii1},
 	{is2, ii2},
@@ -167,40 +159,40 @@ var infotests = []struct {
 }
 
 var (
-	f1      *Field = &Field{`ID`, `GT`, 0, 0}
-	f2      *Field = &Field{`Number`, `1`, 1, 0}
-	f3      *Field = &Field{`Type`, `String`, 2, 0}
-	f4      *Field = &Field{`Description`, `Genotype`, 3, '"'}
-	fkv1           = map[string]*Field{`ID`: f1, `Number`: f2, `Type`: f3, `Description`: f4}
+	f1      *KV = &KV{`ID`, `GT`, 0, 0}
+	f2      *KV = &KV{`Number`, `1`, 1, 0}
+	f3      *KV = &KV{`Type`, `String`, 2, 0}
+	f4      *KV = &KV{`Description`, `Genotype`, 3, '"'}
+	fkv1           = map[string]*KV{`ID`: f1, `Number`: f2, `Type`: f3, `Description`: f4}
 	forder1        = []string{`ID`, `Number`, `Type`, `Description`}
 
-	f5      *Field = &Field{`ID`, `GQ`, 0, 0}
-	f6      *Field = &Field{`Number`, `1`, 1, 0}
-	f7      *Field = &Field{`Type`, `Integer`, 2, 0}
-	f8      *Field = &Field{`Description`, `Genotype Quality`, 3, '"'}
-	fkv2           = map[string]*Field{`ID`: f5, `Number`: f6, `Type`: f7, `Description`: f8}
+	f5      *KV = &KV{`ID`, `GQ`, 0, 0}
+	f6      *KV = &KV{`Number`, `1`, 1, 0}
+	f7      *KV = &KV{`Type`, `Integer`, 2, 0}
+	f8      *KV = &KV{`Description`, `Genotype Quality`, 3, '"'}
+	fkv2           = map[string]*KV{`ID`: f5, `Number`: f6, `Type`: f7, `Description`: f8}
 	forder2        = []string{`ID`, `Number`, `Type`, `Description`}
 
-	f10     *Field = &Field{`ID`, `HQ`, 0, 0}
-	f11     *Field = &Field{`Number`, `2`, 1, 0}
-	f12     *Field = &Field{`Type`, `Integer`, 2, 0}
-	f13     *Field = &Field{`Description`, `Haplotype Quality`, 3, '"'}
-	fkv3           = map[string]*Field{`ID`: f10, `Number`: f11, `Type`: f12, `Description`: f13}
+	f10     *KV = &KV{`ID`, `HQ`, 0, 0}
+	f11     *KV = &KV{`Number`, `2`, 1, 0}
+	f12     *KV = &KV{`Type`, `Integer`, 2, 0}
+	f13     *KV = &KV{`Description`, `Haplotype Quality`, 3, '"'}
+	fkv3           = map[string]*KV{`ID`: f10, `Number`: f11, `Type`: f12, `Description`: f13}
 	forder3        = []string{`ID`, `Number`, `Type`, `Description`}
 
-	f14     *Field = &Field{`ID`, `DP`, 0, 0}
-	f15     *Field = &Field{`Number`, `1`, 1, 0}
-	f16     *Field = &Field{`Type`, `Integer`, 2, 0}
-	f17     *Field = &Field{`Description`, `Read Depth`, 3, '"'}
-	fkv4           = map[string]*Field{`ID`: f14, `Number`: f15, `Type`: f16, `Description`: f17}
+	f14     *KV = &KV{`ID`, `DP`, 0, 0}
+	f15     *KV = &KV{`Number`, `1`, 1, 0}
+	f16     *KV = &KV{`Type`, `Integer`, 2, 0}
+	f17     *KV = &KV{`Description`, `Read Depth`, 3, '"'}
+	fkv4           = map[string]*KV{`ID`: f14, `Number`: f15, `Type`: f16, `Description`: f17}
 	forder4        = []string{`ID`, `Number`, `Type`, `Description`}
 
 	// FORMAT 5 is the same as 4 except for the order
-	f18     *Field = &Field{`ID`, `DP`, 2, 0}
-	f19     *Field = &Field{`Number`, `1`, 1, 0}
-	f20     *Field = &Field{`Type`, `Integer`, 3, 0}
-	f21     *Field = &Field{`Description`, `Read Depth`, 0, '"'}
-	fkv5           = map[string]*Field{`ID`: f18, `Number`: f19, `Type`: f20, `Description`: f21}
+	f18     *KV = &KV{`ID`, `DP`, 2, 0}
+	f19     *KV = &KV{`Number`, `1`, 1, 0}
+	f20     *KV = &KV{`Type`, `Integer`, 3, 0}
+	f21     *KV = &KV{`Description`, `Read Depth`, 0, '"'}
+	fkv5           = map[string]*KV{`ID`: f18, `Number`: f19, `Type`: f20, `Description`: f21}
 	forder5        = []string{`Description`, `Number`, `ID`, `Type`}
 )
 
@@ -259,11 +251,13 @@ func (s *VCFSuite) TestKvSplitter(c *C) {
 }
 
 func (s *VCFSuite) TestHeaderInfoParse(c *C) {
-	for _, v := range infotests {
-		obs, err := parseHeaderInfo(v.input)
+	for _, v := range metaLineInfoTests {
+		obs, err := NewMetaLineFromString(v.input)
 		c.Assert(err, IsNil)
 		c.Assert(obs, DeepEquals, v.exp)
-		c.Assert(obs.String(), Equals, v.input)
+		s, err := obs.String()
+		c.Assert(err, IsNil)
+		c.Assert(s, Equals, v.input)
 	}
 }
 
@@ -304,7 +298,7 @@ func (s *VCFSuite) TestHeaderContigParse(c *C) {
 }
 
 func (s *VCFSuite) TestHeaderExtra(c *C) {
-	obs, err := parseHeaderExtraKV("##key=value")
+	obs, err := parseHeaderExtra("##key=value")
 	c.Assert(err, IsNil)
 	c.Assert(obs[0], Equals, "key")
 	c.Assert(obs[1], Equals, "value")

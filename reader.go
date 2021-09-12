@@ -64,15 +64,8 @@ func NewReader(r io.Reader, lazySamples bool) (*Reader, error) {
 	var LineNumber int64
 	h := NewHeader()
 
-	// This is going to get a big restructure.
-	// 1. All of the meta-info lines are going to be collapsed into a
-	//    pair of regex matches against the metaStructured and
-	//    metaUnstructured patterns.
-	// 2. Within the patterns from 1, we will be doing a generic parse
-	// 3. Depending on the metaType, we will be doing specific
-	//    validation checks for different types of meta-info lines
-	// 3. Depending on the metaType, we will be inserting the structs
-	//    into different header maps and checking for duplicate IDs.
+	// This is going to get a big restructure - all of the meta-info lines
+    // are going to be collapsed into a single type called MetaLine
 
 	for {
 
@@ -132,29 +125,11 @@ func NewReader(r io.Reader, lazySamples bool) (*Reader, error) {
 		} else if strings.HasPrefix(line, "##PEDIGREE") {
 			h.Pedigrees = append(h.Pedigrees, line)
 
-		} else if structuredMetaRegexp.Find([]byte(line)) != nil {
-			m, err := NewStructuredMetaFromString(line)
-			verr.Add(err, LineNumber)
-			h.Structured = append(h.Structured, m)
-			h.lines = append(h.lines, m)
-			if m.LineKey == `PICKLE` {
-				v, err := m.GetValue(`ID`)
-				verr.Add(err, LineNumber)
-				h.Pickles[v] = m
-			}
-		} else if unstructuredMetaRegexp.Find([]byte(line)) != nil {
-			m, err := NewUnstructuredMetaFromString(line)
-			verr.Add(err, LineNumber)
-			h.Unstructured = append(h.Unstructured, m)
-			h.lines = append(h.lines, m)
-
 		} else if strings.HasPrefix(line, "##") {
-			kv, err := parseHeaderExtraKV(line)
+            // This should handle all meta information lines
+			m, err := NewMetaLineFromString(line)
 			verr.Add(err, LineNumber)
-
-			if kv != nil && len(kv) == 2 {
-				h.Extras = append(h.Extras, line)
-			}
+			h.Lines = append(h.Lines, m)
 
 		} else if strings.HasPrefix(line, "#CHROM") {
 			var err error

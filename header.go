@@ -30,7 +30,7 @@ type Info struct {
 	Description string
 	Number      string            // A G R . ''
 	Type        string            // STRING INTEGER FLOAT FLAG CHARACTER UNKNOWN
-	fields      map[string]*Field // grendeloz
+	fields      map[string]*KV  // grendeloz
 	order       []string          // grendeloz
 }
 
@@ -56,25 +56,17 @@ type Header struct {
 	// Parsed from #CHROM line.
 	SampleNames []string
 
-	// This holds an array of StructuredMeta and UnstructuredMeta
-	// in the order in which they were observed in the original header.
+	// This holds an array of meat-information lines
+    // in the order in which they were observed in the original header.
 	// It does not hold the fileformat meta line which is parsed
 	// separately and nor does it hold the #CHROM line.
-	lines []interface{}
-
-	// This is the heart of the new header system but it's nowhere near
-	// complete yet. And if I can master the reflect package, it may
-	// yet turn out that lines plus some nice functions that pull out
-	// interfaces from lines is all we need.
-	Structured   []*StructuredMeta
-	Unstructured []*UnstructuredMeta
+	Lines []*MetaLine
 
 	// I think these are all headed to the scrap heap once I have the
 	// Structured and Unstructured lists (maps?) working.
 	Infos         map[string]*Info
 	SampleFormats map[string]*SampleFormat
 	Filters       map[string]string
-	Pickles       map[string]*StructuredMeta
 	Extras        []string
 	// Contigs is a list of maps of length, URL, etc.
 	Contigs []map[string]string
@@ -87,7 +79,7 @@ type Header struct {
 func (i *Info) String() string {
 	// Work out original order of fields
 	positions := make([]int, 0)
-	ogorder := make(map[int]*Field)
+	ogorder := make(map[int]*KV)
 
 	// New position-based map of fields
 	for _, f := range i.fields {
@@ -119,7 +111,7 @@ func (i *Info) String() string {
 func (s *SampleFormat) String() string {
 	// Work out original order of fields
 	positions := make([]int, 0)
-	ogorder := make(map[int]*Field)
+	ogorder := make(map[int]*KV)
 
 	// New position-based map of fields
 	for _, f := range s.fields {

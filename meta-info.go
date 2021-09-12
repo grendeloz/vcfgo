@@ -22,15 +22,15 @@ var unstructuredMetaRegexp = regexp.MustCompile(`^##(\w+)=(.+)`)
 var fieldSeparator rune = ','
 var kvSeparator rune = '='
 
-// Field holds key=value fields from structured meta-information lines
-// such as INFO, FORMAT and FILTER. See section 1.4 from the VCFv4.3
+// KV holds a key=value pair. It can be used for structured meta-information
+// lines such as INFO, FORMAT and FILTER. See section 1.4 from the VCFv4.3
 // specification (version 27 Jul 2021; retrieved 2021-09-05) at:
 // https://samtools.github.io/hts-specs/VCFv4.3.pdf
-type Field struct {
+type KV struct {
 	Key   string
 	Value string
 
-	// 0-based index of where this Field appeared in the original
+	// 0-based index of where this KV appeared in the original
 	// string. It is used to recreate meta lines as strings with the
 	// key=value pairs in the same order as they were in the original.
 	Index int
@@ -63,7 +63,7 @@ func (m MetaType) EnumIndex() int {
 }
 
 // MetaLine is designed to hold information from both structured and
-// unstructured meta information lines from the VCF header. Fields and
+// unstructured meta information lines from the VCF header. KVs and
 // Order will only be set for structured lines and Value will only be set
 // for unstructured lines.
 // different fields set for the different MetaTypes.
@@ -79,14 +79,14 @@ type MetaLine struct {
 	LineKey string
 
 	// Value is only used in Unstructured MetaLines - STructured
-	// MetaLines use Fields and Order instead.
+	// MetaLines use KVs and Order instead.
 	Value string
 
-	// Fields and Order contain the key=value items (as Fields) from a
-	// Structured MetaLine plus the order in which they occured in the
-	// OgString or the order in which they were added with AddField().
+	// KVs and Order contain the key=value items (as KV) from a
+	// Structured MetaLine plus the order in which they occurred in the
+	// OgString or the order in which they were added with AddKV().
 	// The Order is obeyed by String()
-	Fields map[string]*Field
+	KVs    map[string]*KV
 	Order  []string
 
 	// OgString is only available if the MetaLine was created via
@@ -95,11 +95,11 @@ type MetaLine struct {
 }
 
 // NewMetaLine returns a pointer to a MetaLine. By default, the MetaType
-// is Unstructured. If you use the AddField() function, MetaType will be
+// is Unstructured. If you use the AddKV() function, MetaType will be
 // automatically converted to Structured.
 func NewMetaLine() *MetaLine {
 	var m MetaLine
-	m.Fields = make(map[string]*Field)
+	m.KVs = make(map[string]*KV)
 	m.Order = make([]string, 0)
 	return &m
 }
@@ -123,7 +123,7 @@ func NewMetaLineFromString(s string) (*MetaLine, error) {
 		}
 		m.MetaType = Structured
 		m.LineKey = res[1]
-		m.Fields = fields
+		m.KVs = fields
 		m.Order = order
 		m.OgString = s
 
@@ -152,10 +152,10 @@ func (m *MetaLine) String() (string, error) {
 	if m.MetaType == Structured {
 		// Work out original order of fields
 		positions := make([]int, 0)
-		ogorder := make(map[int]*Field)
+		ogorder := make(map[int]*KV)
 
 		// New position-based map of fields
-		for _, f := range m.Fields {
+		for _, f := range m.KVs {
 			ogorder[f.Index] = f
 			positions = append(positions, f.Index)
 		}
@@ -186,143 +186,14 @@ func (m *MetaLine) String() (string, error) {
 	return ``, fmt.Errorf("MetaType has an unexpected value: %v", m.MetaType)
 }
 
-// StructuredMeta can hold any of the structured meta-information
-// lines, i.e. those that have the pattern '##KEY=<(key=value)+>'.
-type StructuredMeta struct {
-	LineNumber int64
-	LineKey    string
-	Fields     map[string]*Field
-	Order      []string
-	OgString   string // only available if created via NewMetaStructuredFromString()
-}
-
-// metaUnstructured can hold any of the structured meta-information
-// lines, i.e. those that have the pattern '##KEY=<(key=value)+>'.
-type UnstructuredMeta struct {
-	LineNumber int64
-	Key        string
-	Value      string
-	OgString   string // only available if created via NewMetaUnstructuredFromString()
-}
-
-// NewStructuredMeta allocates the internals and returns a *Info
-func NewStructuredMeta() *StructuredMeta {
-	var m StructuredMeta
-	m.Fields = make(map[string]*Field)
-	m.Order = make([]string, 0)
-	return &m
-}
-
-// NewUnstructuredMeta allocates the internals and returns a *Info
-func NewUnstructuredMeta() *UnstructuredMeta {
-	var m UnstructuredMeta
-	return &m
-}
-
-func NewStructuredMetaFromString(s string) (*StructuredMeta, error) {
-	var m StructuredMeta
-	res := structuredMetaRegexp.FindStringSubmatch(s)
-	if len(res) != 3 {
-		return &m, fmt.Errorf("vcfgo: line did not match structured line pattern [%s]", s)
-	}
-
-	fields, order, err := kvSplitter(res[2])
-	if err != nil {
-		return &m, err
-	}
-	m.LineKey = res[1]
-	m.Fields = fields
-	m.Order = order
-	m.OgString = s
-
-	return &m, nil
-}
-
-func NewUnstructuredMetaFromString(s string) (*UnstructuredMeta, error) {
-	var m UnstructuredMeta
-	res := unstructuredMetaRegexp.FindStringSubmatch(s)
-	if len(res) != 3 {
-		return &m, fmt.Errorf("vcfgo: line did not match unstructured line pattern [%s]", s)
-	}
-
-	m.Key = res[1]
-	m.Value = res[2]
-	m.OgString = s
-
-	return &m, nil
-}
-
-// String returns a string representation.
-func (m *StructuredMeta) String() string {
-	// Work out original order of fields
-	positions := make([]int, 0)
-	ogorder := make(map[int]*Field)
-
-	// New position-based map of fields
-	for _, f := range m.Fields {
-		ogorder[f.Index] = f
-		positions = append(positions, f.Index)
-	}
-	sort.Ints(positions)
-
-	// Create field strings in original order
-	fieldStrings := make([]string, 0)
-	for _, k := range positions {
-		f := ogorder[k]
-		thisStr := f.Key + `=`
-		if f.Quote != 0 {
-			thisStr += string(f.Quote) + f.Value + string(f.Quote)
-		} else {
-			thisStr += f.Value
-		}
-		fieldStrings = append(fieldStrings, thisStr)
-	}
-
-	// Assemble final string
-	newStr := `##` + m.LineKey + `=<` + strings.Join(fieldStrings, `,`) + `>`
-	//fmt.Println(newStr)
-	return newStr
-}
-
-// A meta Header line type using StructuredMeta by composition
-type Pickle StructuredMeta
-
-func NewPickle() *Pickle {
-	var p Pickle
-	p.LineKey = `PICKLE`
-	p.Fields = make(map[string]*Field)
-	p.Order = make([]string, 0)
-	return &p
-}
-
-// GetValue returns the value for a given key. If the key does not exist,
-// an ErrKeyNotFound error is returned.
-func (m *StructuredMeta) GetValue(k string) (string, error) {
-	if f, found := m.Fields[k]; found {
-		return f.Value, nil
-	} else {
-		return ``, ErrKeyNotFound
-	}
-}
-
-// GetField returns the Field for a given key. If the key does not exist,
-// an ErrKeyNotFound error is returned.
-func (m *StructuredMeta) GetField(k string) (*Field, error) {
-	if f, found := m.Fields[k]; found {
-		return f, nil
-	} else {
-		return nil, ErrKeyNotFound
-	}
-}
-
 // kvSplitter parses a structured meta-information line into a map of
-// Fields where each Field is a key=value pair from the string.  This map
+// KVs where each KV is a key=value pair from the string.  This map
 // can be used as the building block for structs such as Info, Format etc.
-func kvSplitter(s string) (map[string]*Field, []string, error) {
+func kvSplitter(s string) (map[string]*KV, []string, error) {
 	//info := NewInfo()
 
 	//fmt.Printf("string: %s\n", s)
-	fields := make(map[string]*Field)
+	fields := make(map[string]*KV)
 	var order []string
 
 	runes := []rune(s)
@@ -352,7 +223,7 @@ func kvSplitter(s string) (map[string]*Field, []string, error) {
 		case inValue:
 			if r == fieldSeparator {
 				//fmt.Printf("> i:%d r:%c k:%s v:%s ctr:%d state:%v\n", i, r, k, v, ctr, state)
-				f := Field{Key: k, Value: v, Index: ctr}
+				f := KV{Key: k, Value: v, Index: ctr}
 				//fmt.Printf("field: %v\n", f)
 				fields[k] = &f
 				order = append(order, k)
@@ -372,7 +243,7 @@ func kvSplitter(s string) (map[string]*Field, []string, error) {
 		case inQuotedValue:
 			// quotes only count if they are not backspaced
 			if r == quote && lastrune != '\\' {
-				f := Field{Key: k, Value: v, Index: ctr, Quote: quote}
+				f := KV{Key: k, Value: v, Index: ctr, Quote: quote}
 				//fmt.Printf("field: %v\n", f)
 				fields[k] = &f
 				order = append(order, k)
@@ -398,7 +269,7 @@ func kvSplitter(s string) (map[string]*Field, []string, error) {
 	// key=value pair.
 	if state == inValue {
 		//fmt.Printf("> k:%s v:%s ctr:%d state:%v\n", k, v, ctr, state)
-		f := Field{Key: k, Value: v, Index: ctr}
+		f := KV{Key: k, Value: v, Index: ctr}
 		//fmt.Printf("field: %v\n", f)
 		fields[k] = &f
 		order = append(order, k)
