@@ -42,7 +42,7 @@ type Reader struct {
 	buf         *bufio.Reader
 	Header      *Header
 	verr        *VCFError
-	LineNumber  int64
+	LineNumber  int
 	lazySamples bool
 	r           io.Reader
 }
@@ -61,11 +61,11 @@ func NewReader(r io.Reader, lazySamples bool) (*Reader, error) {
 
 	var verr = NewVCFError()
 
-	var LineNumber int64
+	var LineNumber int
 	h := NewHeader()
 
 	// This is going to get a big restructure - all of the meta-info lines
-    // are going to be collapsed into a single type called MetaLine
+	// are going to be collapsed into a single type called MetaLine
 
 	for {
 
@@ -74,8 +74,18 @@ func NewReader(r io.Reader, lazySamples bool) (*Reader, error) {
 		if err != nil && err != io.EOF {
 			verr.Add(err, LineNumber)
 		}
-		if len(line) > 1 && line[len(line)-1] == '\n' {
+
+		// Strip \n and \r from the end of the line if present
+		if len(line) > 0 && line[len(line)-1] == '\n' {
 			line = line[:len(line)-1]
+		}
+		if len(line) > 0 && line[len(line)-1] == '\r' {
+			line = line[:len(line)-1]
+		}
+
+		// Skip empty lines - \s on the line will cause this check to be bypassed.
+		if len(line) == 0 {
+			continue
 		}
 
 		if LineNumber == 1 {
@@ -83,53 +93,57 @@ func NewReader(r io.Reader, lazySamples bool) (*Reader, error) {
 			verr.Add(err, LineNumber)
 			h.FileFormat = v
 
-		} else if strings.HasPrefix(line, "##FORMAT") {
-			format, err := parseHeaderFormat(line)
-			verr.Add(err, LineNumber)
-			if format != nil {
-				h.SampleFormats[format.Id] = format
-			}
+			//		} else if strings.HasPrefix(line, "##FORMAT") {
+			//			format, err := parseHeaderFormat(line)
+			//			verr.Add(err, LineNumber)
+			//			if format != nil {
+			//				h.SampleFormats[format.Id] = format
+			//			}
 
-		} else if strings.HasPrefix(line, "##INFO") {
-			info, err := parseHeaderInfo(line)
-			verr.Add(err, LineNumber)
-			if info != nil {
-				h.Infos[info.Id] = info
-			}
+			//} else if strings.HasPrefix(line, "##INFO") {
+			//	info, err := parseHeaderInfo(line)
+			//	verr.Add(err, LineNumber)
+			//	if info != nil {
+			//		h.Infos[info.Id] = info
+			//	}
 
-		} else if strings.HasPrefix(line, "##FILTER") {
-			filter, err := parseHeaderFilter(line)
-			verr.Add(err, LineNumber)
-			if filter != nil && len(filter) == 2 {
-				h.Filters[filter[0]] = filter[1]
-			}
+			//} else if strings.HasPrefix(line, "##FILTER") {
+			//	filter, err := parseHeaderFilter(line)
+			//	verr.Add(err, LineNumber)
+			//	if filter != nil && len(filter) == 2 {
+			//		h.Filters[filter[0]] = filter[1]
+			//	}
 
-		} else if strings.HasPrefix(line, "##contig") {
-			contig, err := parseHeaderContig(line)
-			verr.Add(err, LineNumber)
-			if contig != nil {
-				if _, ok := contig["ID"]; ok {
-					h.Contigs = append(h.Contigs, contig)
-				} else {
-					verr.Add(fmt.Errorf("bad contig: %v", line), LineNumber)
-				}
-			}
-		} else if strings.HasPrefix(line, "##SAMPLE") {
-			sample, err := parseHeaderSample(line)
-			verr.Add(err, LineNumber)
-			if sample != "" {
-				h.Samples[sample] = line
-			} else {
-				verr.Add(fmt.Errorf("bad sample: %v", line), LineNumber)
-			}
-		} else if strings.HasPrefix(line, "##PEDIGREE") {
-			h.Pedigrees = append(h.Pedigrees, line)
+			//} else if strings.HasPrefix(line, "##contig") {
+			//	contig, err := parseHeaderContig(line)
+			//	verr.Add(err, LineNumber)
+			//	if contig != nil {
+			//		if _, ok := contig["ID"]; ok {
+			//			h.Contigs = append(h.Contigs, contig)
+			//		} else {
+			//			verr.Add(fmt.Errorf("bad contig: %v", line), LineNumber)
+			//		}
+			//	}
+
+			//} else if strings.HasPrefix(line, "##SAMPLE") {
+			//	sample, err := parseHeaderSample(line)
+			//	verr.Add(err, LineNumber)
+			//	if sample != "" {
+			//		h.Samples[sample] = line
+			//	} else {
+			//		verr.Add(fmt.Errorf("bad sample: %v", line), LineNumber)
+			//	}
+
+			//} else if strings.HasPrefix(line, "##PEDIGREE") {
+			//	h.Pedigrees = append(h.Pedigrees, line)
 
 		} else if strings.HasPrefix(line, "##") {
-            // This should handle all meta information lines
+			// This should handle all meta information lines
 			m, err := NewMetaLineFromString(line)
 			verr.Add(err, LineNumber)
+			m.LineNumber = LineNumber
 			h.Lines = append(h.Lines, m)
+            //fmt.Println(m.OgString)
 
 		} else if strings.HasPrefix(line, "#CHROM") {
 			var err error
@@ -143,6 +157,8 @@ func NewReader(r io.Reader, lazySamples bool) (*Reader, error) {
 			return nil, e
 		}
 	}
+
+    // Construct and return *Reader
 	reader := &Reader{buffered, h, verr, LineNumber, lazySamples, r}
 	return reader, reader.Error()
 }

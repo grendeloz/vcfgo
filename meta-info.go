@@ -68,7 +68,7 @@ func (m MetaType) EnumIndex() int {
 // for unstructured lines.
 // different fields set for the different MetaTypes.
 type MetaLine struct {
-	LineNumber int64
+	LineNumber int
 
 	// MetaType defaults to Unstructured. You can manually set this
 	// value but it's best not to. Let the package do the work.
@@ -86,8 +86,8 @@ type MetaLine struct {
 	// Structured MetaLine plus the order in which they occurred in the
 	// OgString or the order in which they were added with AddKV().
 	// The Order is obeyed by String()
-	KVs    map[string]*KV
-	Order  []string
+	KVs   map[string]*KV
+	Order []string
 
 	// OgString is only available if the MetaLine was created via
 	// NewMetaLineFromString().
@@ -184,6 +184,19 @@ func (m *MetaLine) String() (string, error) {
 	}
 	// If we get to here then m.MetaType is borked.
 	return ``, fmt.Errorf("MetaType has an unexpected value: %v", m.MetaType)
+}
+
+
+// GetValue takes a key and returns the value for that key from the
+// MetaLine's key=value set. Only meaningful for Structured MetaLines and
+// will always return an empty string for Unstructured MetaLines.
+func (m *MetaLine) GetValue(k string) string {
+    for _, kv := range m.KVs {
+        if kv.Key == k {
+            return kv.Value
+        }
+    }
+    return ""
 }
 
 // kvSplitter parses a structured meta-information line into a map of

@@ -7,7 +7,7 @@ import (
 
 func TestKVCreation(t *testing.T) {
 	var tests = []struct {
-		KV *KV
+		KV    *KV
 		Key   string
 		Value string
 		Index int

@@ -128,7 +128,7 @@ String returns a string that matches the original info field.
 type Reader struct {
 	Header *Header
 
-	LineNumber int64
+	LineNumber int
 }
 ```
 
@@ -215,7 +215,7 @@ String returns the string representation of the sample field.
 ```go
 type VCFError struct {
 	Msgs  []string
-	Lines []int64
+	Lines []int
 }
 ```
 
@@ -234,7 +234,7 @@ NewVCFError allocates the needed ingredients.
 #### func (*VCFError) Add
 
 ```go
-func (e *VCFError) Add(err error, line int64)
+func (e *VCFError) Add(err error, line int)
 ```
 Add adds an error and the line number within the vcf where the error took place.
 
@@ -274,7 +274,7 @@ type Variant struct {
 	Format     		[]string
 	Samples    		[]*SampleGenotype
 	Header     		*Header
-	LineNumber 		int64
+	LineNumber 		int
 }
 ```
 

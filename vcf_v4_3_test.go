@@ -32,7 +32,7 @@ var VCFv4_3eg = `##fileformat=VCFv4.3
 20	1230237	.	T	.	47	PASS	NS=3;DP=13;AA=T	GT:GQ:DP:HQ 0|0:54:7:56,60	0|0:48:4:51,51	0/0:61:2
 20	1234567	microsat1	GTC	G,GTCT	50	PASS	NS=3;DP=9;AA=G	GT:GQ:DP	0/1:35:4	0/2:17:2	1/1:40:3`
 
-func TestVCFv4_3(t *testing.T) {
+func TestVCFv4_3_Header(t *testing.T) {
 
 	// Read the VCFv4.3 header string
 	r := bytes.NewReader([]byte(VCFv4_3eg))
@@ -50,6 +50,7 @@ func TestVCFv4_3(t *testing.T) {
 	}{
 		{`FileFormat`, rdr.Header.FileFormat, `4.3`},
 		{`SampleNames count`, len(rdr.Header.SampleNames), 3},
+		{`MetaLines count`, len(rdr.Header.Lines), 17},
 	}
 
 	for _, v := range tests {
@@ -57,6 +58,18 @@ func TestVCFv4_3(t *testing.T) {
 			t.Errorf("%v is %v but expected %v\n", v.label, v.obs, v.exp)
 		}
 	}
+}
+
+func TestVCFv4_3_Variants(t *testing.T) {
+
+	// Read the VCFv4.3 header string
+	r := bytes.NewReader([]byte(VCFv4_3eg))
+	rdr, err := NewReader(r, false)
+	if err != nil {
+		t.Errorf("Reading the VCFv4.3 example header threw an error: %v\n", err)
+	}
+
+    _ = rdr
 
 	// Read and test the variants
 	//	for {
@@ -65,4 +78,52 @@ func TestVCFv4_3(t *testing.T) {
 	//			break
 	//		}
 	//	}
+}
+
+func TestVCFv4_3_INFO(t *testing.T) {
+
+	// Read the VCFv4.3 header string
+	r := bytes.NewReader([]byte(VCFv4_3eg))
+	rdr, err := NewReader(r, false)
+	if err != nil {
+		t.Errorf("Reading the VCFv4.3 example header threw an error: %v\n", err)
+	}
+
+	// Test INFO lines
+    // ##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">
+    // ##INFO=<ID=DP,Number=1,Type=Integer,Description="Total Depth">
+    // ##INFO=<ID=AF,Number=A,Type=Float,Description="Allele Frequency">
+    // ##INFO=<ID=AA,Number=1,Type=String,Description="Ancestral Allele">
+    // ##INFO=<ID=DB,Number=0,Type=Flag,Description="dbSNP membership, build 129">
+    // ##INFO=<ID=H2,Number=0,Type=Flag,Description="HapMap2 membership">
+
+    lines := rdr.Header.GetLinesByType(`INFO`)
+
+	var tests = []struct {
+		label string
+		obs   interface{}
+		exp   interface{}
+	}{
+		{`INFO lines count`, len(lines), 6},
+		{`Line 0 ID`, lines[0].GetValue(`ID`), `NS`},
+		{`Line 0 Number`, lines[0].GetValue(`Number`), `1`},
+		{`Line 0 Type`, lines[0].GetValue(`Type`), `Integer`},
+		{`Line 0 Description`, lines[0].GetValue(`Description`), `Number of Samples With Data`},
+		{`Line 1 ID`, lines[1].GetValue(`ID`), `DP`},
+		{`Line 2 ID`, lines[2].GetValue(`ID`), `AF`},
+		{`Line 2 Number`, lines[2].GetValue(`Number`), `A`},
+		{`Line 2 Type`, lines[2].GetValue(`Type`), `Float`},
+		{`Line 3 ID`, lines[3].GetValue(`ID`), `AA`},
+		{`Line 3 Type`, lines[3].GetValue(`Type`), `String`},
+		{`Line 4 ID`, lines[4].GetValue(`ID`), `DB`},
+		{`Line 5 ID`, lines[5].GetValue(`ID`), `H2`},
+		{`Line 5 Number`, lines[5].GetValue(`Number`), `0`},
+		{`Line 5 Type`, lines[5].GetValue(`Type`), `Flag`},
+	}
+
+	for _, v := range tests {
+		if v.obs != v.exp {
+			t.Errorf("%v is %v but expected %v\n", v.label, v.obs, v.exp)
+		}
+	}
 }

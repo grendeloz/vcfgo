@@ -11,7 +11,7 @@ import (
 // but also let the caller know about the error.
 type VCFError struct {
 	Msgs  []string
-	Lines []int64
+	Lines []int
 }
 
 // Error returns a string with all errors delimited by newlines.
@@ -30,18 +30,18 @@ func (e *VCFError) Error() string {
 
 // NewVCFError allocates the needed ingredients.
 func NewVCFError() *VCFError {
-	e := VCFError{Msgs: make([]string, 0), Lines: make([]int64, 0)}
+	e := VCFError{Msgs: make([]string, 0), Lines: make([]int, 0)}
 	return &e
 }
 
 // Add adds an error and the line number within the vcf where the error took place.
-func (e *VCFError) Add(err error, line int64) {
+func (e *VCFError) Add(err error, line int) {
 	if err != nil {
 		if ierr := err.Error(); ierr != "" {
 			if len(e.Msgs) == 5000 {
 				// only keep at most 5K errors.
 				m := make([]string, 0, 5000)
-				l := make([]int64, 0, 5000)
+				l := make([]int, 0, 5000)
 				m = append(m, e.Msgs[3000:]...)
 				l = append(l, e.Lines[3000:]...)
 				e.Msgs = m

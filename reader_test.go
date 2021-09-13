@@ -1,5 +1,4 @@
-package vcfgo
-
+package vcfgo 
 import (
 	"io"
 	"os"
@@ -35,44 +34,83 @@ func (s *ReaderSuite) TestLazyReader(c *C) {
 
 func (s *ReaderSuite) TestReaderHeaderInfos(c *C) {
 
-	parsedNS := &Info{Id: "NS",
-		Number:      "1",
-		Type:        "Integer",
-		Description: "Number of Samples With Data",
-		fields: map[string]*KV{
+	parsed_INFO_NS := &MetaLine{
+		LineNumber: 7,
+		MetaType:   Structured,
+		LineKey:    `INFO`,
+		OgString:   `##INFO=<ID=NS,Number=1,Type=Integer,Description="Number of Samples With Data">`,
+		KVs: map[string]*KV{
 			`ID`:          &KV{"ID", "NS", 0, 0},
 			`Number`:      &KV{"Number", "1", 1, 0},
 			`Type`:        &KV{"Type", "Integer", 2, 0},
 			`Description`: &KV{"Description", "Number of Samples With Data", 3, '"'}},
-		order: []string{`ID`, `Number`, `Type`, `Description`}}
+		Order: []string{`ID`, `Number`, `Type`, `Description`}}
 
-	parsedGT := &SampleFormat{Id: "GT",
-		Number:      "1",
-		Type:        "String",
-		Description: "Genotype",
-		fields: map[string]*KV{
+	parsed_FILTER_q10 := &MetaLine{
+		LineNumber: 15,
+		MetaType:   Structured,
+		LineKey:    `FILTER`,
+		OgString: `##FILTER=<ID=q10,Description="Quality below 10">`,
+		KVs: map[string]*KV{
+			`ID`:          &KV{"ID", "q10", 0, 0},
+			`Description`: &KV{"Description", "Quality below 10", 1, '"'}},
+		Order: []string{`ID`, `Description`}}
+
+	parsed_FORMAT_GT := &MetaLine{
+		LineNumber: 18,
+		MetaType:   Structured,
+		LineKey:    `FORMAT`,
+		OgString: `##FORMAT=<ID=GT,Number=1,Type=String,Description="Genotype">`,
+		KVs: map[string]*KV{
 			`ID`:          &KV{"ID", "GT", 0, 0},
 			`Number`:      &KV{"Number", "1", 1, 0},
 			`Type`:        &KV{"Type", "String", 2, 0},
 			`Description`: &KV{"Description", "Genotype", 3, '"'}},
-		order: []string{`ID`, `Number`, `Type`, `Description`}}
+		Order: []string{`ID`, `Number`, `Type`, `Description`}}
 
 	v, err := NewReader(s.reader, false)
 	c.Assert(err, IsNil)
-	c.Assert(v.Header.Infos["NS"], DeepEquals, parsedNS)
-	c.Assert(v.Header.Filters["q10"], Equals, "Quality below 10")
-	c.Assert(v.Header.SampleFormats["GT"], DeepEquals, parsedGT)
+
+	n, err := v.Header.GetLineByTypeAndId(`INFO`, `NS`)
+	c.Assert(err, IsNil)
+	c.Assert(n.LineKey, Equals, "INFO")
+	c.Assert(n.GetValue(`ID`), Equals, "NS")
+	c.Assert(n, DeepEquals, parsed_INFO_NS)
+
+	n, err = v.Header.GetLineByTypeAndId(`FILTER`, `q10`)
+	c.Assert(err, IsNil)
+	c.Assert(n, DeepEquals, parsed_FILTER_q10)
+	c.Assert(n.LineKey, Equals, "FILTER")
+	c.Assert(n.GetValue(`ID`), Equals, "q10")
+	c.Assert(n.GetValue(`Description`), Equals, "Quality below 10")
+
+	n, err = v.Header.GetLineByTypeAndId(`FORMAT`, `GT`)
+	c.Assert(err, IsNil)
+	c.Assert(n.LineKey, Equals, "FORMAT")
+	c.Assert(n.GetValue(`ID`), Equals, "GT")
+	c.Assert(n, DeepEquals, parsed_FORMAT_GT)
 }
 
-func (s *ReaderSuite) TestReaderHeaderExtras(c *C) {
+func (s *ReaderSuite) TestReaderHeaderLineOrder(c *C) {
 	v, err := NewReader(s.reader, true)
 	c.Assert(err, IsNil)
-	c.Assert(len(v.Header.Lines), Equals, 4)
+
+	c.Assert(len(v.Header.Lines), Equals, 21)
+
 	c.Assert(v.Header.Lines[0].OgString, Equals, `##fileDate=20090805`)
 	c.Assert(v.Header.Lines[0].LineKey, Equals, `fileDate`)
 	c.Assert(v.Header.Lines[0].Value, Equals, `20090805`)
-	c.Assert(v.Header.Lines[3].LineKey, Equals, `phasing`)
-	c.Assert(v.Header.Lines[3].Value, Equals, `partial`)
+	c.Assert(v.Header.Lines[0].LineNumber, Equals, 2)
+	c.Assert(v.Header.Lines[4].LineKey, Equals, `phasing`)
+	c.Assert(v.Header.Lines[4].Value, Equals, `partial`)
+	c.Assert(v.Header.Lines[4].LineNumber, Equals, 6)
+	c.Assert(v.Header.Lines[5].LineKey, Equals, `INFO`)
+	c.Assert(v.Header.Lines[12].LineKey, Equals, `INFO`)
+	c.Assert(v.Header.Lines[13].LineKey, Equals, `FILTER`)
+	c.Assert(v.Header.Lines[15].LineKey, Equals, `FILTER`)
+	c.Assert(v.Header.Lines[16].LineKey, Equals, `FORMAT`)
+	c.Assert(v.Header.Lines[20].LineKey, Equals, `FORMAT`)
+	c.Assert(v.Header.Lines[20].LineNumber, Equals, 22)
 }
 
 func (s *ReaderSuite) TestReaderRead(c *C) {

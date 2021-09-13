@@ -163,37 +163,37 @@ var (
 	f2      *KV = &KV{`Number`, `1`, 1, 0}
 	f3      *KV = &KV{`Type`, `String`, 2, 0}
 	f4      *KV = &KV{`Description`, `Genotype`, 3, '"'}
-	fkv1           = map[string]*KV{`ID`: f1, `Number`: f2, `Type`: f3, `Description`: f4}
-	forder1        = []string{`ID`, `Number`, `Type`, `Description`}
+	fkv1        = map[string]*KV{`ID`: f1, `Number`: f2, `Type`: f3, `Description`: f4}
+	forder1     = []string{`ID`, `Number`, `Type`, `Description`}
 
 	f5      *KV = &KV{`ID`, `GQ`, 0, 0}
 	f6      *KV = &KV{`Number`, `1`, 1, 0}
 	f7      *KV = &KV{`Type`, `Integer`, 2, 0}
 	f8      *KV = &KV{`Description`, `Genotype Quality`, 3, '"'}
-	fkv2           = map[string]*KV{`ID`: f5, `Number`: f6, `Type`: f7, `Description`: f8}
-	forder2        = []string{`ID`, `Number`, `Type`, `Description`}
+	fkv2        = map[string]*KV{`ID`: f5, `Number`: f6, `Type`: f7, `Description`: f8}
+	forder2     = []string{`ID`, `Number`, `Type`, `Description`}
 
 	f10     *KV = &KV{`ID`, `HQ`, 0, 0}
 	f11     *KV = &KV{`Number`, `2`, 1, 0}
 	f12     *KV = &KV{`Type`, `Integer`, 2, 0}
 	f13     *KV = &KV{`Description`, `Haplotype Quality`, 3, '"'}
-	fkv3           = map[string]*KV{`ID`: f10, `Number`: f11, `Type`: f12, `Description`: f13}
-	forder3        = []string{`ID`, `Number`, `Type`, `Description`}
+	fkv3        = map[string]*KV{`ID`: f10, `Number`: f11, `Type`: f12, `Description`: f13}
+	forder3     = []string{`ID`, `Number`, `Type`, `Description`}
 
 	f14     *KV = &KV{`ID`, `DP`, 0, 0}
 	f15     *KV = &KV{`Number`, `1`, 1, 0}
 	f16     *KV = &KV{`Type`, `Integer`, 2, 0}
 	f17     *KV = &KV{`Description`, `Read Depth`, 3, '"'}
-	fkv4           = map[string]*KV{`ID`: f14, `Number`: f15, `Type`: f16, `Description`: f17}
-	forder4        = []string{`ID`, `Number`, `Type`, `Description`}
+	fkv4        = map[string]*KV{`ID`: f14, `Number`: f15, `Type`: f16, `Description`: f17}
+	forder4     = []string{`ID`, `Number`, `Type`, `Description`}
 
 	// FORMAT 5 is the same as 4 except for the order
 	f18     *KV = &KV{`ID`, `DP`, 2, 0}
 	f19     *KV = &KV{`Number`, `1`, 1, 0}
 	f20     *KV = &KV{`Type`, `Integer`, 3, 0}
 	f21     *KV = &KV{`Description`, `Read Depth`, 0, '"'}
-	fkv5           = map[string]*KV{`ID`: f18, `Number`: f19, `Type`: f20, `Description`: f21}
-	forder5        = []string{`Description`, `Number`, `ID`, `Type`}
+	fkv5        = map[string]*KV{`ID`: f18, `Number`: f19, `Type`: f20, `Description`: f21}
+	forder5     = []string{`Description`, `Number`, `ID`, `Type`}
 )
 
 // grendeloz: The DeepEqual testing requires us to recreate the expected

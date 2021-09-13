@@ -25,7 +25,7 @@ type Variant struct {
 	// if lazy parsing, then just save the sample strings here.
 	sampleString string
 	Header       *Header
-	LineNumber   int64
+	LineNumber   int
 }
 
 func (v *Variant) Info() interfaces.Info {

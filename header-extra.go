@@ -16,11 +16,12 @@ import (
 // common and expected meta-info lines. And while there are only two
 // underlying types of meta-info lines (structured and unstructured), each
 // different type (as defined by the KEY) of meta-line has different
+// logic.
 // The original vcfgo went down the route of specific parsing and
 // validation code and golang structs/types for each different type of
 // meta-line.
 // In the redesign, I'm trying to make the parsing and use of meta-lines
-// generic, the validation will still have to be specific.
+// generic, but the validation will still have to be specific.
 
 type parserState int
 

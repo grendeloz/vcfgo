@@ -28,10 +28,10 @@ var fileVersionRegexp = regexp.MustCompile(`##fileformat=VCFv(.+)`)
 type Info struct {
 	Id          string
 	Description string
-	Number      string            // A G R . ''
-	Type        string            // STRING INTEGER FLOAT FLAG CHARACTER UNKNOWN
-	fields      map[string]*KV  // grendeloz
-	order       []string          // grendeloz
+	Number      string         // A G R . ''
+	Type        string         // STRING INTEGER FLOAT FLAG CHARACTER UNKNOWN
+	fields      map[string]*KV // grendeloz
+	order       []string       // grendeloz
 }
 
 // SampleFormat holds the type info for Format fields.
@@ -57,7 +57,7 @@ type Header struct {
 	SampleNames []string
 
 	// This holds an array of meat-information lines
-    // in the order in which they were observed in the original header.
+	// in the order in which they were observed in the original header.
 	// It does not hold the fileformat meta line which is parsed
 	// separately and nor does it hold the #CHROM line.
 	Lines []*MetaLine
@@ -144,6 +144,48 @@ func (h *Header) Validate(verr *VCFError) []error {
 	var errs []error
 	return errs
 }*/
+
+// Returns all MetaLines in the Header that match the supplied type,
+// e.g. `INFO`, `FORMAT`, `fileDate`. Note that the type matching is case
+// sensitive so `info` and `INFO` are not interchangeable. Also note that
+// the array returned is of pointers to the MetaLines held by the Header so
+// if you change them, you change the originals.
+func (h *Header) GetLinesByType(t string) []*MetaLine {
+	var l []*MetaLine
+	for _, m := range h.Lines {
+		if m.LineKey == t {
+			l = append(l, m)
+		}
+	}
+	return l
+}
+
+// Returns all MetaLines in the Header that match the supplied type,
+// e.g. `INFO`, `FORMAT`, `fileDate` and that have the supplied ID. Note
+// that this will only work for structured meta-info lines and that by
+// definition, within a type, there can only be one record with a given ID
+// so an error is thrown if more than one MetaLine is found.
+// Also note that the type and ID matching are both case sensitive.
+// Also note that the return type is a pointer to the MetaLine held by the
+// Header so if you change it, you change the original.
+func (h *Header) GetLineByTypeAndId(t string, id string) (*MetaLine, error) {
+	var l []*MetaLine
+	for _, m := range h.Lines {
+		if m.MetaType == Structured &&
+		    m.LineKey == t &&
+			m.GetValue(`ID`) == id {
+			l = append(l, m)
+		}
+	}
+
+	if len(l) == 0 {
+		return &MetaLine{}, fmt.Errorf("no MetaLines found matching type %s and ID %s", t, id)
+	} else if len(l) > 1 {
+		return &MetaLine{}, fmt.Errorf("too many MetaLines (%d) found matching type %s and ID %s", len(l), t, id)
+	} else {
+		return l[0], nil
+	}
+}
 
 func (h *Header) parseSample(format []string, s string) (*SampleGenotype, []error) {
 	values := strings.Split(s, ":")
